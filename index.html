@@ -3,7 +3,8 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
-  <title>Flow Cytometer Booking — HANS 305</title>
+  <title>Flow Cytometer Booking | HANS 305</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📅</text></svg>">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;700&display=swap" rel="stylesheet">
   <!-- Supabase JS client -->
@@ -72,7 +73,7 @@
     .time-slot.booked-cell{background:#5a4510;cursor:pointer;}
     .time-slot.booked-cell.past{background:#1e1804;opacity:1;cursor:pointer;}
     .time-slot:not(.booked-cell):not(.past):not(.blocked-cell):hover{background:rgba(228,164,137,.18);box-shadow:inset 0 0 0 2px rgba(228,164,137,.7);}
-    .time-slot.work-hours:not(.booked-cell):not(.past):hover{background:#4a5f4e;box-shadow:inset 0 0 0 2px rgba(228,164,137,.5);}
+    .time-slot.work-hours:not(.booked-cell):not(.past):not(.blocked-cell):hover{background:#4a5f4e;box-shadow:inset 0 0 0 2px rgba(228,164,137,.5);}
 
     .offhours-toggle-row{display:grid;grid-template-columns:90px repeat(7,1fr);background:var(--offhour-bg);border-bottom:1px solid var(--border);cursor:pointer;user-select:none;transition:background .15s;}
     .offhours-toggle-row:hover{background:#2e3740;}
@@ -87,13 +88,23 @@
     .time-slot.cluster-top{border-bottom:1px dashed #8a7030;}
     .time-slot.cluster-mid{border-top:none;border-bottom:1px dashed #8a7030;}
     .time-slot.cluster-bot{border-top:none;}
-    .time-slot.blocked-cell{display:flex;flex-direction:column;justify-content:flex-start;padding:4px 6px;overflow:hidden;background:#6a5420;cursor:not-allowed;}
-    .time-slot.blocked-cell .bk-name{font-weight:700;font-size:.78rem;color:#d4a840;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.3;}
-    .time-slot.blocked-cell .bk-period{font-size:.62rem;color:rgba(240,216,138,.7);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.2;margin-top:1px;}
+    .time-slot.blocked-cell{display:flex;flex-direction:column;justify-content:flex-start;padding:4px 6px;overflow:hidden;background:#7a2020;cursor:not-allowed;}
+    .time-slot.blocked-cell.past{background:#3d1010;opacity:1;}
+    .time-slot.blocked-cell .bk-name{font-weight:700;font-size:.78rem;color:#f0a0a0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.3;}
+    .time-slot.blocked-cell .bk-period{font-size:.62rem;color:rgba(240,160,160,.7);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.2;margin-top:1px;}
     .time-slot.booked-cell:hover:not(.past){filter:brightness(1.15);cursor:pointer;}
-    .time-slot.blocked-cell.cluster-top{border-bottom:1px dashed #a08030;}
-    .time-slot.blocked-cell.cluster-mid{border-top:none;border-bottom:1px dashed #a08030;}
+    .time-slot.blocked-cell:hover{filter:brightness(1.15);}
+    .time-slot.blocked-cell.cluster-top{border-bottom:1px dashed #b05050;}
+    .time-slot.blocked-cell.cluster-mid{border-top:none;border-bottom:1px dashed #b05050;}
     .time-slot.blocked-cell.cluster-bot{border-top:none;}
+
+    /* Date chips */
+    .date-chip{display:inline-flex;align-items:center;gap:6px;background:rgba(90,69,16,.4);border:1px solid rgba(200,168,74,.4);border-radius:20px;padding:5px 12px 5px 14px;font-size:.85rem;font-weight:600;color:#f0d890;white-space:nowrap;}
+    .date-chip button{background:none;border:none;color:#a88830;cursor:pointer;font-size:.9rem;padding:0;line-height:1;font-weight:700;}
+    .date-chip button:hover{color:#c8a840;}
+    .date-chip.red{background:rgba(80,15,15,.6);border-color:rgba(160,60,60,.5);color:#e0a0a0;}
+    .date-chip.red button{color:#c06060;}
+    .date-chip.red button:hover{color:#e08080;}
 
     /* Legend */
     .legend{display:flex;gap:20px;flex-wrap:wrap;margin-top:18px;font-size:.9rem;color:var(--text-mid);}
@@ -190,7 +201,6 @@
       <div class="db-dot loading" id="dbDot"></div>
       <span id="dbLabel" style="color:var(--text-dim)">Connecting…</span>
     </div>
-    <button class="btn btn-export" onclick="openExportModal()">Export</button>
     <button class="btn" onclick="showAdmin()">Admin</button>
   </div>
 </header>
@@ -203,7 +213,7 @@
       <div class="week-nav-btns">
         <button class="btn" id="prevWeekBtn" onclick="changeWeek(-1)">← Prev</button>
         <button class="btn" onclick="goToday()">Today</button>
-        <button class="btn" onclick="changeWeek(1)">Next →</button>
+        <button class="btn" id="nextWeekBtn" onclick="changeWeek(1)">Next →</button>
       </div>
     </div>
     <div class="calendar" id="calendar"></div>
@@ -226,36 +236,65 @@
       <button class="btn" onclick="hideAdmin()">← Back to Calendar</button>
     </div>
 
-    <!-- Bookings table -->
-    <div class="card">
-      <div class="section-title" style="font-size:.9rem;margin-bottom:14px">All Bookings</div>
+    <!-- Bookings: add + table merged — golden theme -->
+    <div class="card" style="border-color:rgba(200,168,74,.35);background:linear-gradient(135deg,#2a2010 0%,var(--surface) 60%);">
+      <div class="section-title" style="font-size:.9rem;margin-bottom:14px;color:#f0d890;">📋 Bookings</div>
+
+      <!-- Add Booking form -->
+      <div style="background:rgba(90,69,16,.3);border:1px solid rgba(200,168,74,.3);border-radius:8px;padding:16px;margin-bottom:18px;">
+        <div style="font-size:.85rem;font-weight:700;color:#c8a840;margin-bottom:12px;">Add Booking (Admin)</div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;margin-bottom:10px;">
+          <div class="form-group" style="margin:0"><label style="font-size:.78rem;color:#a88830;">Start Time</label><select id="adminBookStart" style="width:140px;background:#1e1808;border:2px solid rgba(200,168,74,.4);border-radius:8px;padding:8px 10px;font-family:'Google Sans',sans-serif;font-size:.9rem;color:var(--text);outline:none;"></select></div>
+          <div class="form-group" style="margin:0"><label style="font-size:.78rem;color:#a88830;">End Time</label><select id="adminBookEnd" style="width:140px;background:#1e1808;border:2px solid rgba(200,168,74,.4);border-radius:8px;padding:8px 10px;font-family:'Google Sans',sans-serif;font-size:.9rem;color:var(--text);outline:none;"></select></div>
+        </div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:10px;">
+          <div class="form-group" style="margin:0;flex:1;min-width:160px;"><label style="font-size:.78rem;color:#a88830;">Name *</label><input type="text" id="adminBookName" placeholder="First Last" style="width:100%;background:#1e1808;border:2px solid rgba(200,168,74,.4);border-radius:8px;padding:8px 12px;font-family:'Google Sans',sans-serif;font-size:.95rem;color:var(--text);outline:none;min-height:44px;"></div>
+          <div class="form-group" style="margin:0;flex:1;min-width:160px;"><label style="font-size:.78rem;color:#a88830;">PI / Lab *</label><input type="text" id="adminBookPI" placeholder="Dr. Smith Lab" style="width:100%;background:#1e1808;border:2px solid rgba(200,168,74,.4);border-radius:8px;padding:8px 12px;font-family:'Google Sans',sans-serif;font-size:.95rem;color:var(--text);outline:none;min-height:44px;"></div>
+        </div>
+        <div class="form-group" style="margin-bottom:10px;"><label style="font-size:.78rem;color:#a88830;">Notes (optional)</label><textarea id="adminBookNotes" placeholder="Sample type, experiment, etc." style="width:100%;min-height:60px;resize:vertical;background:#1e1808;border:2px solid rgba(200,168,74,.4);border-radius:8px;padding:8px 10px;font-family:'Google Sans',sans-serif;font-size:.9rem;color:var(--text);outline:none;"></textarea></div>
+        <div style="margin-bottom:10px;">
+          <div style="font-size:.78rem;font-weight:700;color:#a88830;margin-bottom:8px;">Dates</div>
+          <div id="adminBookDatesDisplay" style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;"></div>
+          <div style="display:flex;gap:8px;align-items:center;margin-top:8px;">
+            <input type="date" id="adminBookDateInline" style="color-scheme:dark;background:#1e1808;border:2px solid rgba(200,168,74,.4);border-radius:8px;padding:7px 10px;font-family:'Google Sans',sans-serif;font-size:.9rem;color:var(--text);outline:none;min-height:38px;">
+            <button class="btn" style="padding:6px 16px;min-height:38px;font-size:.9rem;border-color:rgba(200,168,74,.5);color:#c8a840;" onclick="addAdminBookDateInline()">Add Date</button>
+          </div>
+        </div>
+        <div style="margin-top:14px;">
+          <button class="btn" style="background:#7a6010;border-color:#c8a840;color:#f0d890;font-weight:700;padding:10px 20px;" onclick="adminAddBooking()">Save Booking(s)</button>
+        </div>
+      </div>
+
+      <!-- All Bookings table -->
+      <div style="font-size:.85rem;font-weight:700;color:#c8a840;margin-bottom:10px;">All Bookings</div>
       <table class="admin-table">
-        <thead><tr><th>Date</th><th>Time</th><th>Dur.</th><th>Name</th><th>PI</th><th>Notes</th><th>Action</th></tr></thead>
+        <thead><tr><th style="color:#c8a840;">Date</th><th style="color:#c8a840;">Time</th><th style="color:#c8a840;">Dur.</th><th style="color:#c8a840;">Name</th><th style="color:#c8a840;">PI</th><th style="color:#c8a840;">Notes</th><th style="color:#c8a840;">Action</th></tr></thead>
         <tbody id="adminTableBody"></tbody>
       </table>
     </div>
 
-    <!-- Block management -->
-    <div class="card">
-      <div class="section-title" style="font-size:.9rem;margin-bottom:14px">Maintenance / Blocked Periods</div>
-      <div style="background:var(--surface2);border-radius:8px;padding:16px;margin-bottom:18px;">
-        <div style="font-size:.85rem;font-weight:700;color:var(--text-mid);margin-bottom:12px;">Add Block</div>
+    <!-- Block management — dark red theme -->
+    <div class="card" style="border-color:rgba(160,40,40,.5);background:linear-gradient(135deg,#2a1a1a 0%,var(--surface) 60%);">
+      <div class="section-title" style="font-size:.9rem;margin-bottom:14px;color:#e08080;">🔒 Maintenance / Blocked Periods</div>
+      <div style="background:rgba(100,20,20,.35);border:1px solid rgba(160,40,40,.4);border-radius:8px;padding:16px;margin-bottom:18px;">
+        <div style="font-size:.85rem;font-weight:700;color:#c07070;margin-bottom:12px;">Add Block</div>
         <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;margin-bottom:10px;">
-          <div class="form-group" style="margin:0"><label style="font-size:.78rem">Start Time</label><select id="blockStart" style="width:140px;background:var(--surface);border:2px solid var(--border);border-radius:8px;padding:8px 10px;font-family:'Google Sans',sans-serif;font-size:.9rem;color:var(--text);outline:none;"></select></div>
-          <div class="form-group" style="margin:0"><label style="font-size:.78rem">End Time</label><select id="blockEnd" style="width:140px;background:var(--surface);border:2px solid var(--border);border-radius:8px;padding:8px 10px;font-family:'Google Sans',sans-serif;font-size:.9rem;color:var(--text);outline:none;"></select></div>
-          <div class="form-group" style="margin:0"><label style="font-size:.78rem">Reason</label><input type="text" id="blockReason" placeholder="e.g. Maintenance" style="width:180px"></div>
+          <div class="form-group" style="margin:0"><label style="font-size:.78rem;color:#b06060;">Start Time</label><select id="blockStart" style="width:140px;background:#2a1515;border:2px solid rgba(160,60,60,.5);border-radius:8px;padding:8px 10px;font-family:'Google Sans',sans-serif;font-size:.9rem;color:var(--text);outline:none;"></select></div>
+          <div class="form-group" style="margin:0"><label style="font-size:.78rem;color:#b06060;">End Time</label><select id="blockEnd" style="width:140px;background:#2a1515;border:2px solid rgba(160,60,60,.5);border-radius:8px;padding:8px 10px;font-family:'Google Sans',sans-serif;font-size:.9rem;color:var(--text);outline:none;"></select></div>
+          <div class="form-group" style="margin:0"><label style="font-size:.78rem;color:#b06060;">Reason</label><input type="text" id="blockReason" placeholder="e.g. Maintenance" style="width:180px;background:#2a1515;border:2px solid rgba(160,60,60,.5);border-radius:8px;padding:8px 12px;font-family:'Google Sans',sans-serif;font-size:.95rem;color:var(--text);outline:none;min-height:44px;"></div>
         </div>
         <div style="margin-bottom:10px;">
-          <div style="margin-bottom:10px;">
-            <div style="font-size:.78rem;font-weight:700;color:var(--text-mid);margin-bottom:8px;">Dates <span id="blockDateCount" style="color:var(--text-dim);font-weight:400">(none added)</span></div>
-            <button class="btn" style="padding:6px 16px;min-height:36px;font-size:.9rem" onclick="openDatePickerModal()">Add Date</button>
+          <div style="font-size:.78rem;font-weight:700;color:#b06060;margin-bottom:8px;">Dates</div>
+          <div id="blockDatesDisplay" style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:8px;"></div>
+          <div style="display:flex;gap:8px;align-items:center;">
+            <input type="date" id="blockDateInline" style="color-scheme:dark;background:#2a1515;border:2px solid rgba(160,60,60,.5);border-radius:8px;padding:7px 10px;font-family:'Google Sans',sans-serif;font-size:.9rem;color:var(--text);outline:none;min-height:38px;">
+            <button class="btn" style="padding:6px 16px;min-height:38px;font-size:.9rem;border-color:rgba(160,60,60,.6);color:#c08080;" onclick="addBlockDateInline()">Add Date</button>
           </div>
-          <div class="date-grid" id="blockDatesDisplay"></div>
         </div>
-        <button class="btn btn-primary" onclick="addBlock()">Save Block(s)</button>
+        <button class="btn" style="background:#7a2020;border-color:#a03030;color:#f0c0c0;font-weight:700;padding:10px 20px;" onclick="addBlock()">Save Block(s)</button>
       </div>
-      <table class="admin-table" id="blocksTable">
-        <thead><tr><th>Date</th><th>Time</th><th>Reason</th><th>Action</th></tr></thead>
+      <table class="admin-table">
+        <thead><tr><th style="color:#c07070;">Date</th><th style="color:#c07070;">Time</th><th style="color:#c07070;">Reason</th><th style="color:#c07070;">Action</th></tr></thead>
         <tbody id="blocksTableBody"></tbody>
       </table>
     </div>
@@ -290,7 +329,7 @@
     <div style="display:flex;gap:16px;margin-bottom:18px;flex-wrap:wrap;">
       <div class="form-group" style="margin:0;flex:1;min-width:140px;">
         <label>Start Time</label>
-        <select id="bookStartTime" onchange="updateBookSlotInfo()" style="background:var(--surface);border:2px solid var(--border);border-radius:8px;padding:8px 10px;font-family:'Google Sans',sans-serif;font-size:.95rem;color:var(--text);outline:none;min-height:44px;transition:border-color .15s;width:100%"></select>
+        <select id="bookStartTime" style="background:var(--surface);border:2px solid var(--border);border-radius:8px;padding:8px 10px;font-family:'Google Sans',sans-serif;font-size:.95rem;color:var(--text);outline:none;min-height:44px;transition:border-color .15s;width:100%"></select>
       </div>
       <div class="form-group" style="margin:0;flex:1;min-width:140px;">
         <label>End Time</label>
@@ -354,23 +393,6 @@
   </div>
 </div>
 
-<!-- DATE PICKER MODAL -->
-<div class="modal-overlay" id="datePickerModal">
-  <div class="modal" style="max-width:380px">
-    <button class="modal-close" onclick="closeModal('datePickerModal')">✕</button>
-    <h3>Add Date</h3>
-    <p style="font-size:.88rem;color:var(--text-dim);margin-bottom:18px">Pick a date to block, then click Add. Repeat for multiple dates.</p>
-    <div class="form-group">
-      <label>Date</label>
-      <input type="date" id="datePickerInput" style="color-scheme:dark;width:100%">
-    </div>
-    <div class="modal-actions">
-      <button class="btn" onclick="closeModal('datePickerModal')">Done</button>
-      <button class="btn btn-primary" onclick="addBlockDateFromModal()">Add Date</button>
-    </div>
-  </div>
-</div>
-
 <div class="toast" id="toast"></div>
 
 <script>
@@ -411,6 +433,7 @@ let blocksList  = [];  // array of block row objects
 let currentWeekOffset = 0, pendingSlot = null, currentViewKey = null;
 let isAdminAuthed = false, nightEarlyExpanded = false, nightLateExpanded = false;
 let blockPendingDates = [];
+let adminBookPendingDates = [];
 
 // ══════════════════════════════════════════
 // UTILITIES
@@ -420,7 +443,7 @@ function dateKey(d)    { return `${d.getFullYear()}-${String(d.getMonth()+1).pad
 function bookingKey(ds,s){ return `${ds}_${s}`; }
 function escHtml(s)    { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 function makeClusterKey(){ return `ck_${Date.now()}_${Math.random().toString(36).slice(2,7)}`; }
-function timeStrToSlot(t){ const[h,m]=t.split(':').map(Number); return h*2+(m>=30?1:0); }
+function timeStrToSlot(t){ if(t==='24:00') return 48; const[h,m]=t.split(':').map(Number); return h*2+(m>=30?1:0); }
 
 function isSlotPast(dateObj,slot){
   const t=new Date(dateObj); t.setHours(Math.floor(slot/2),slot%2===0?0:30,0,0); return t<new Date();
@@ -437,7 +460,7 @@ function isSlotBlocked(dateStr,slot){
 }
 function isWithinBookingWindow(date){
   const now=new Date(); now.setHours(0,0,0,0);
-  const lim=new Date(now); lim.setDate(lim.getDate()+31);
+  const lim=new Date(now); lim.setDate(lim.getDate()+35);
   return date>=now && date<lim;
 }
 function isNightEarly(s){return s>=SLOT_NIGHT_EARLY_START&&s<=SLOT_NIGHT_EARLY_END;}
@@ -537,7 +560,8 @@ function renderCalendar(){
   const ws=days[0],we=days[6];
   document.getElementById('weekLabel').textContent=
     `${MONTHS[ws.getMonth()]} ${ws.getDate()} – ${MONTHS[we.getMonth()]} ${we.getDate()}, ${we.getFullYear()}`;
-  document.getElementById('prevWeekBtn').disabled=currentWeekOffset<=0;
+  document.getElementById('prevWeekBtn').disabled=currentWeekOffset<=-4;
+  document.getElementById('nextWeekBtn').disabled=currentWeekOffset>=5;
 
   const today=new Date(); today.setHours(0,0,0,0);
   const cal=document.getElementById('calendar');
@@ -593,7 +617,7 @@ function renderCalendar(){
         const bSS=sh*2+(sm2>=30?1:0);
         const bES=Math.max(0,(eh*2+(em>0?1:0))-1);
         const isFirst=(s===bSS), isLast=(s===bES);
-        cls+=' blocked-cell';
+        cls+=' blocked-cell'+(past?' past':'');
         if(bSS!==bES){
           if(isFirst) cls+=' cluster-top';
           else if(isLast) cls+=' cluster-bot';
@@ -640,8 +664,9 @@ function renderCalendar(){
 // ══════════════════════════════════════════
 function openBookModal(dateStr,slot){
   pendingSlot={dateStr,slot:parseInt(slot)};
-  document.getElementById('bookStartTime').value=slotToLabel(parseInt(slot));
-  document.getElementById('bookEndTime').value  =slotToLabel(Math.min(parseInt(slot)+1,47));
+  const startSel = document.getElementById('bookStartTime');
+  startSel.value = slotToLabel(parseInt(slot));
+  refreshBookEndTimes(dateStr, parseInt(slot), true);
   document.getElementById('bookName').value =localStorage.getItem('fc_name')||'';
   document.getElementById('bookPI').value   =localStorage.getItem('fc_pi')||'';
   document.getElementById('bookNotes').value='';
@@ -667,20 +692,10 @@ function updateBookSlotInfo(){
     msgEl.textContent='End time must be after start time.'; msgEl.style.display='block';
     btn.disabled=true; btn.style.opacity='0.5'; return;
   }
-  if(count>16){
-    msgEl.textContent='Maximum booking duration is 8 hours.'; msgEl.style.display='block';
-    btn.disabled=true; btn.style.opacity='0.5'; return;
-  }
-  let conflict=false, msg='';
-  for(let s=startSlot;s<endSlot;s++){
-    if(s>47){conflict=true;msg='Duration extends past midnight.';break;}
-    if(bookingsMap[bookingKey(dateStr,s)]){conflict=true;msg=`${slotToLabel(s)} is already booked.`;break;}
-    const bl=isSlotBlocked(dateStr,s);
-    if(bl){conflict=true;msg=`${slotToLabel(s)} is blocked (${bl.reason||'maintenance'}).`;break;}
-  }
-  msgEl.style.display=conflict?'block':'none';
-  if(conflict) msgEl.textContent=msg;
-  btn.disabled=conflict; btn.style.opacity=conflict?'0.5':'1';
+
+  // End options are pre-filtered to exclude booked/blocked slots, so no conflict possible
+  msgEl.style.display='none';
+  btn.disabled=false; btn.style.opacity='1';
 }
 
 async function confirmBooking(){
@@ -694,7 +709,7 @@ async function confirmBooking(){
   const startSlot=timeStrToSlot(startTime);
   const endSlot  =timeStrToSlot(endTime);
   const count=endSlot-startSlot;
-  if(count<=0||count>16){showToast('Invalid time range.',true);return;}
+  if(count<=0){showToast('Invalid time range.',true);return;}
   const{dateStr}=pendingSlot;
   const ck=count>1?makeClusterKey():null;
 
@@ -852,52 +867,69 @@ async function removeBlock(id){
 }
 
 // Multi-date block adding
-function openDatePickerModal(){
-  document.getElementById('datePickerInput').value='';
-  openModal('datePickerModal');
-  setTimeout(()=>document.getElementById('datePickerInput').focus(),100);
-}
-function addBlockDateFromModal(){
-  const d=document.getElementById('datePickerInput').value;
+function addBlockDateInline(){
+  const inp=document.getElementById('blockDateInline');
+  const d=inp.value;
   if(!d){showToast('Pick a date first.',true);return;}
   if(blockPendingDates.includes(d)){showToast('Date already added.',true);return;}
   blockPendingDates.push(d);
   renderBlockDatesDisplay();
-  document.getElementById('datePickerInput').value='';
+  inp.value='';
 }
 function removeBlockDate(d){blockPendingDates=blockPendingDates.filter(x=>x!==d);renderBlockDatesDisplay();}
 function renderBlockDatesDisplay(){
   const el=document.getElementById('blockDatesDisplay');
-  const countEl=document.getElementById('blockDateCount');
-  if(countEl) countEl.textContent=blockPendingDates.length===0?'(none added)':`(${blockPendingDates.length} date${blockPendingDates.length===1?'':'s'})`;
-  if(!blockPendingDates.length){
-    el.innerHTML='<div class="date-grid-empty">No dates added yet. Click "Add Date" to begin.</div>'; return;
-  }
+  if(!el) return;
   el.innerHTML=blockPendingDates.map(d=>{
     const[y,m,dd]=d.split('-');
-    return `<div class="date-grid-item">
-      <span class="date-val">${MONTHS[Number(m)-1]} ${Number(dd)}, ${y}</span>
-      <button class="remove-date" onclick="removeBlockDate('${d}')" title="Remove">x</button>
-    </div>`;
+    return `<span class="date-chip red"><span>${MONTHS[Number(m)-1]} ${Number(dd)}, ${y}</span><button onclick="removeBlockDate('${d}')" title="Remove">×</button></span>`;
   }).join('');
 }
 
 async function addBlock(){
+  // Auto-add whatever is typed in the inline date input
+  const _bd=document.getElementById('blockDateInline');
+  if(_bd&&_bd.value&&!blockPendingDates.includes(_bd.value)){blockPendingDates.push(_bd.value);_bd.value='';renderBlockDatesDisplay();}
   const start =document.getElementById('blockStart').value;
   const end   =document.getElementById('blockEnd').value;
   const reason=document.getElementById('blockReason').value.trim()||'Blocked';
   if(blockPendingDates.length===0){showToast('Add at least one date.',true);return;}
   if(!start||!end){showToast('Set start and end times.',true);return;}
   if(start>=end){showToast('End must be after start.',true);return;}
+
+  // Find and delete any bookings that conflict with the new block (admin overwrite)
+  const[sh,sm]=start.split(':').map(Number);
+  const[eh,em]=end.split(':').map(Number);
+  const blockStartSlot = sh*2+(sm>=30?1:0);
+  const blockEndSlot   = eh*2+(em>0?1:0); // exclusive
+  const conflictingIds   = [];
+  const conflictingCkeys = new Set();
+  for(const dateStr of blockPendingDates){
+    for(let s=blockStartSlot; s<blockEndSlot; s++){
+      const b=bookingsMap[bookingKey(dateStr,s)];
+      if(!b) continue;
+      if(b.cluster_key) conflictingCkeys.add(b.cluster_key);
+      else conflictingIds.push(b.id);
+    }
+  }
+  let cancelledCount=0;
+  for(const ck of conflictingCkeys){
+    await db.from('bookings').delete().eq('cluster_key',ck);
+    cancelledCount++;
+  }
+  for(const id of conflictingIds){
+    await db.from('bookings').delete().eq('id',id);
+    cancelledCount++;
+  }
+
   const rows=blockPendingDates.map(date=>({date_str:date, start_time:start, end_time:end, reason}));
   const{error}=await db.from('blocks').insert(rows);
   if(error){showToast('Failed to save blocks: '+error.message,true);return;}
   blockPendingDates=[];
   renderBlockDatesDisplay();
-  closeModal('datePickerModal');
   document.getElementById('blockReason').value='';
-  showToast(`Blocked ${start}–${end} on ${rows.length} date${rows.length===1?'':'s'}.`);
-  // Realtime handles table/calendar update
+  const overwriteNote = cancelledCount>0 ? ` (${cancelledCount} conflicting booking${cancelledCount>1?'s':''} removed)` : '';
+  showToast(`Blocked ${start}–${end} on ${rows.length} date${rows.length===1?'':'s'}.${overwriteNote}`);
 }
 
 async function adminCancel(key){
@@ -1011,7 +1043,8 @@ function exportReportHTMLFn(from,to){
   const bkRows=bookingSummary.map(b=>`<tr><td>${b.date}</td><td>${b.name}</td><td>${b.pi}</td><td>${b.start} – ${b.end}</td><td>${b.minutes} min</td></tr>`).join('');
   const blRows=blockSummary.map(b=>`<tr><td>${b.date}</td><td>${b.start} – ${b.end}</td><td>${b.reason}</td><td>${b.minutes} min</td></tr>`).join('');
   const html=`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Flow Cytometer Report ${from} – ${to}</title>
-  <style>body{font-family:'Segoe UI',Arial,sans-serif;background:#f5f0eb;color:#2b2318;padding:40px;max-width:900px;margin:auto;}
+  <link href='https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;700&display=swap' rel='stylesheet'>
+  <style>body{font-family:'Google Sans','Segoe UI',Arial,sans-serif;background:#f5f0eb;color:#2b2318;padding:40px;max-width:900px;margin:auto;}
   h1{color:#3E4C54;font-size:1.8rem;margin-bottom:4px;}h2{color:#BC6C54;font-size:1.1rem;margin:28px 0 10px;}
   .period{color:#6a7a84;font-size:.9rem;margin-bottom:24px;}table{width:100%;border-collapse:collapse;margin-bottom:20px;font-size:.9rem;}
   th{background:#3E4C54;color:#E9D9C8;padding:10px 14px;text-align:left;}td{padding:9px 14px;border-bottom:1px solid #d8cfc4;}
@@ -1037,6 +1070,76 @@ function exportReportHTMLFn(from,to){
 }
 
 // ══════════════════════════════════════════
+// ADMIN MANUAL BOOKING
+// ══════════════════════════════════════════
+function addAdminBookDateInline(){
+  const inp=document.getElementById('adminBookDateInline');
+  const d=inp.value;
+  if(!d){showToast('Pick a date first.',true);return;}
+  if(adminBookPendingDates.includes(d)){showToast('Date already added.',true);return;}
+  adminBookPendingDates.push(d);
+  renderAdminBookDatesDisplay();
+  inp.value='';
+}
+function removeAdminBookDate(d){
+  adminBookPendingDates=adminBookPendingDates.filter(x=>x!==d);
+  renderAdminBookDatesDisplay();
+}
+function renderAdminBookDatesDisplay(){
+  const el=document.getElementById('adminBookDatesDisplay');
+  if(!el) return;
+  el.innerHTML=adminBookPendingDates.map(d=>{
+    const[y,m,dd]=d.split('-');
+    return `<span class="date-chip"><span>${MONTHS[Number(m)-1]} ${Number(dd)}, ${y}</span><button onclick="removeAdminBookDate('${d}')" title="Remove">×</button></span>`;
+  }).join('');
+}
+
+async function adminAddBooking(){
+  // Auto-add whatever is typed in the inline date input
+  const _ad=document.getElementById('adminBookDateInline');
+  if(_ad&&_ad.value&&!adminBookPendingDates.includes(_ad.value)){adminBookPendingDates.push(_ad.value);_ad.value='';renderAdminBookDatesDisplay();}
+  const start = document.getElementById('adminBookStart').value;
+  const end   = document.getElementById('adminBookEnd').value;
+  const name  = document.getElementById('adminBookName').value.trim();
+  const pi    = document.getElementById('adminBookPI').value.trim();
+  const notes = document.getElementById('adminBookNotes').value.trim();
+  if(adminBookPendingDates.length===0){showToast('Add at least one date.',true);return;}
+  if(!name){showToast('Name is required.',true);document.getElementById('adminBookName').focus();return;}
+  if(!pi)  {showToast('PI / Lab is required.',true);document.getElementById('adminBookPI').focus();return;}
+  if(!start||!end){showToast('Set start and end times.',true);return;}
+  const startSlot = timeStrToSlot(start);
+  const endSlot   = timeStrToSlot(end);
+  const count     = endSlot - startSlot;
+  if(count<=0){showToast('End time must be after start time.',true);return;}
+
+  const ck = count>1 ? makeClusterKey() : null;
+  let saved=0, skipped=0;
+  for(const dateStr of adminBookPendingDates){
+    // Check for conflicts on this date
+    let conflict=false;
+    for(let s=startSlot;s<endSlot;s++){
+      if(bookingsMap[bookingKey(dateStr,s)]||isSlotBlocked(dateStr,s)){conflict=true;break;}
+    }
+    if(conflict){skipped++;continue;}
+    const rows=[];
+    for(let s=startSlot;s<endSlot;s++){
+      rows.push({date_str:dateStr,slot:s,cluster_key:ck,cluster_start:startSlot,cluster_end:endSlot-1,name,pi,notes,booked_at:new Date().toISOString()});
+    }
+    const{error}=await db.from('bookings').insert(rows);
+    if(error){showToast('Error saving booking for '+dateStr+': '+error.message,true);continue;}
+    saved++;
+  }
+  adminBookPendingDates=[];
+  renderAdminBookDatesDisplay();
+  document.getElementById('adminBookName').value='';
+  document.getElementById('adminBookPI').value='';
+  document.getElementById('adminBookNotes').value='';
+  let msg=`Booking saved on ${saved} date${saved===1?'':'s'}.`;
+  if(skipped>0) msg+=` (${skipped} skipped due to conflicts)`;
+  showToast(msg, skipped>0&&saved===0);
+}
+
+// ══════════════════════════════════════════
 // MODAL HELPERS
 // ══════════════════════════════════════════
 function openModal(id){document.getElementById(id).classList.add('open');}
@@ -1058,16 +1161,110 @@ function showToast(msg,isError=false){
 // ══════════════════════════════════════════
 // TIME SELECT POPULATION
 // ══════════════════════════════════════════
-function populateTimeSelects(){
+function allTimeOptions(includeMidnight=false){
   const times=[];
   for(let s=0;s<48;s++) times.push(slotToLabel(s));
-  ['bookStartTime','bookEndTime','blockStart','blockEnd'].forEach(id=>{
-    const sel=document.getElementById(id);
-    if(!sel) return;
-    sel.innerHTML=times.map(t=>`<option value="${t}">${t}</option>`).join('');
-  });
-  // Defaults for block end
-  document.getElementById('blockEnd').value='09:00';
+  if(includeMidnight) times.push('24:00'); // sentinel end = midnight
+  return times;
+}
+
+// Populate a start select with all times; populate its paired end select
+// showing only times strictly after the current start value.
+function populatePairedSelects(startId, endId, keepEndIfValid=false, maxSlots=47){
+  const startSel = document.getElementById(startId);
+  const endSel   = document.getElementById(endId);
+  if(!startSel || !endSel) return;
+
+  const times = allTimeOptions();
+  startSel.innerHTML = times.map(t=>`<option value="${t}">${t}</option>`).join('');
+
+  function refreshEnd(isInit){
+    const startSlot   = timeStrToSlot(startSel.value);
+    const prevEnd     = endSel.value;
+    const prevEndSlot = prevEnd === '24:00' ? 48 : timeStrToSlot(prevEnd);
+    const maxEnd      = Math.min(startSlot + maxSlots, 48); // 48 = 24:00
+    const withMid     = allTimeOptions(true); // include 24:00 sentinel
+    endSel.innerHTML  = withMid
+      .filter((_,i) => i > startSlot && i <= maxEnd)
+      .map(t=>`<option value="${t}">${t}</option>`).join('');
+    if(!isInit && keepEndIfValid && prevEnd && prevEndSlot > startSlot && prevEndSlot <= maxEnd){
+      endSel.value = prevEnd;
+    } else {
+      endSel.value = startSlot + 1 <= 47 ? slotToLabel(startSlot + 1) : '24:00';
+    }
+  }
+
+  refreshEnd(true);
+  startSel.addEventListener('change', ()=>refreshEnd(false));
+}
+
+function populateTimeSelects(){
+  // bookStartTime end-options are rebuilt per-open via refreshBookEndTimes (date-aware)
+  // We still need to fill bookStartTime with all 48 options once
+  const bookStart = document.getElementById('bookStartTime');
+  if(bookStart){
+    bookStart.innerHTML = allTimeOptions().map(t=>`<option value="${t}">${t}</option>`).join('');
+    bookStart.addEventListener('change', ()=>{
+      if(pendingSlot){
+        refreshBookEndTimes(pendingSlot.dateStr, timeStrToSlot(bookStart.value), false);
+        updateBookSlotInfo();
+      }
+    });
+  }
+  populatePairedSelects('blockStart',     'blockEnd',     true); // no max, keep end if valid
+  populatePairedSelects('adminBookStart', 'adminBookEnd', true); // admin manual booking
+}
+
+// Build end-time options for the booking modal, stopping before the next booking/block on that date.
+// isInit=true always resets to start+1; isInit=false keeps current end if still valid.
+function refreshBookEndTimes(dateStr, startSlot, isInit){
+  const endSel   = document.getElementById('bookEndTime');
+  const msgEl    = document.getElementById('bookConflictMsg');
+  const btn      = document.getElementById('confirmBookBtn');
+  if(!endSel) return;
+
+  // If the start slot itself is already booked or blocked, disable everything
+  const startOccupied = bookingsMap[bookingKey(dateStr, startSlot)] || isSlotBlocked(dateStr, startSlot);
+  if(startOccupied){
+    endSel.innerHTML = '<option value="">—</option>';
+    endSel.disabled  = true;
+    const reason = isSlotBlocked(dateStr, startSlot)
+      ? 'blocked (' + (isSlotBlocked(dateStr, startSlot).reason || 'maintenance') + ')'
+      : 'already booked';
+    msgEl.textContent = slotToLabel(startSlot) + ' is ' + reason + '.';
+    msgEl.style.display = 'block';
+    btn.disabled = true; btn.style.opacity = '0.5';
+    return;
+  }
+
+  // Start slot is free — re-enable end select and button
+  endSel.disabled = false;
+  msgEl.style.display = 'none';
+  btn.disabled = false; btn.style.opacity = '1';
+
+  const prevEnd     = endSel.value;
+  const prevEndSlot = prevEnd === '24:00' ? 48 : timeStrToSlot(prevEnd);
+  const maxEnd      = Math.min(startSlot + 16, 48); // 8-hr ceiling; 48 = 24:00 midnight
+
+  // Find the first occupied slot after startSlot
+  let firstOccupied = maxEnd + 1;
+  for(let s = startSlot + 1; s <= Math.min(maxEnd, 47); s++){
+    if(bookingsMap[bookingKey(dateStr, s)] || isSlotBlocked(dateStr, s)){
+      firstOccupied = s;
+      break;
+    }
+  }
+  const cap   = Math.min(firstOccupied, maxEnd);
+  const times = allTimeOptions(true);
+  endSel.innerHTML = times
+    .filter((_,i) => i > startSlot && i <= cap)
+    .map(t=>`<option value="${t}">${t}</option>`).join('');
+
+  if(!isInit && prevEnd && prevEndSlot > startSlot && prevEndSlot <= cap){
+    endSel.value = prevEnd;
+  } else {
+    endSel.value = startSlot + 1 <= 47 ? slotToLabel(startSlot + 1) : '24:00';
+  }
 }
 
 // ══════════════════════════════════════════
