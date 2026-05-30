@@ -476,7 +476,7 @@ function setDbStatus(state){
   const dot   = document.getElementById('dbDot');
   const label = document.getElementById('dbLabel');
   dot.className   = 'db-dot ' + state;
-  label.textContent = state==='connected' ? 'Live' : state==='error' ? 'Database Error' : 'Connecting…';
+  label.textContent = state==='connected' ? 'Live' : state==='error' ? 'DB Error' : 'Connecting…';
   label.style.color = state==='connected' ? '#6aba6a' : state==='error' ? '#e07070' : 'var(--text-dim)';
 }
 
@@ -852,7 +852,6 @@ async function removeBlock(id){
 }
 
 // Multi-date block adding
-let blockPendingDates=[];
 function openDatePickerModal(){
   document.getElementById('datePickerInput').value='';
   openModal('datePickerModal');
