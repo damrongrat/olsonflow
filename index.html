@@ -6,6 +6,8 @@
   <title>Flow Cytometer Booking — HANS 305</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+  <!-- Supabase JS client -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
     :root {
       --primary:#3E4C54; --peach:#E4A489; --rust:#BC6C54; --sage:#9B9F91;
@@ -55,7 +57,6 @@
     .cal-header-cell .day-num{display:block;font-size:1.2rem;font-weight:800;font-family:'Google Sans',sans-serif;margin-top:2px;color:var(--text);}
     .cal-header-cell.today .day-num{color:var(--peach);}
 
-    /* Calendar rows */
     .cal-rows-wrapper{width:100%;overflow:visible;}
     .cal-row{display:grid;grid-template-columns:90px repeat(7,1fr);border-bottom:1px solid var(--border);height:var(--slot-h);}
     .cal-row:last-child{border-bottom:none;}
@@ -68,28 +69,24 @@
     .time-slot.off-hours{background:var(--offhour-bg);}
     .time-slot.normal{background:var(--normal-bg);}
     .time-slot.past{opacity:.42;cursor:default;}
-    .time-slot.booked-cell{background:#5a4510;cursor:pointer;} /* overridden by in-cell rule above */
+    .time-slot.booked-cell{background:#5a4510;cursor:pointer;}
     .time-slot.booked-cell.past{background:#1e1804;opacity:1;cursor:pointer;}
     .time-slot:not(.booked-cell):not(.past):not(.blocked-cell):hover{background:rgba(228,164,137,.18);box-shadow:inset 0 0 0 2px rgba(228,164,137,.7);}
     .time-slot.work-hours:not(.booked-cell):not(.past):hover{background:#4a5f4e;box-shadow:inset 0 0 0 2px rgba(228,164,137,.5);}
 
-    /* Off-hours toggle */
     .offhours-toggle-row{display:grid;grid-template-columns:90px repeat(7,1fr);background:var(--offhour-bg);border-bottom:1px solid var(--border);cursor:pointer;user-select:none;transition:background .15s;}
     .offhours-toggle-row:hover{background:#2e3740;}
     .offhours-toggle-label{grid-column:1/-1;padding:8px 16px;font-size:.82rem;font-weight:700;color:var(--khaki);display:flex;align-items:center;gap:8px;}
     .toggle-icon{font-size:.72rem;transition:transform .2s;display:inline-block;}
     .offhours-toggle-label.expanded .toggle-icon{transform:rotate(90deg);}
 
-    /* In-cell booking content */
     .time-slot.booked-cell{display:flex;flex-direction:column;justify-content:flex-start;padding:4px 6px;overflow:hidden;}
     .time-slot.booked-cell .bk-name{font-weight:700;font-size:.78rem;color:#f0d890;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.3;}
     .time-slot.booked-cell .bk-pi{font-size:.68rem;color:#c8a840;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.2;margin-top:1px;}
     .time-slot.booked-cell .bk-period{font-size:.62rem;color:rgba(240,216,138,.7);line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:1px;}
-    /* Cluster borders — connect cells visually */
     .time-slot.cluster-top{border-bottom:1px dashed #8a7030;}
     .time-slot.cluster-mid{border-top:none;border-bottom:1px dashed #8a7030;}
     .time-slot.cluster-bot{border-top:none;}
-    /* Blocked cell */
     .time-slot.blocked-cell{display:flex;flex-direction:column;justify-content:flex-start;padding:4px 6px;overflow:hidden;background:#6a5420;cursor:not-allowed;}
     .time-slot.blocked-cell .bk-name{font-weight:700;font-size:.78rem;color:#d4a840;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.3;}
     .time-slot.blocked-cell .bk-period{font-size:.62rem;color:rgba(240,216,138,.7);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.2;margin-top:1px;}
@@ -123,8 +120,7 @@
     .modal-actions{display:flex;gap:10px;justify-content:flex-end;margin-top:22px;flex-wrap:wrap;}
     .modal-close{position:absolute;top:16px;right:16px;background:none;border:none;color:var(--text-dim);cursor:pointer;font-size:1.3rem;line-height:1;}
     .modal-close:hover{color:var(--text);}
-    .slot-count-row{display:flex;align-items:center;gap:12px;margin-bottom:18px;}
-    .slot-count-row label{font-size:.95rem;font-weight:700;color:var(--text-mid);flex-shrink:0;}
+
     .booking-detail p{font-size:1rem;color:var(--text);margin-bottom:11px;display:flex;gap:12px;}
     .booking-detail p span:first-child{color:var(--text-dim);width:90px;flex-shrink:0;font-size:.82rem;font-weight:700;text-transform:uppercase;letter-spacing:.04em;padding-top:3px;}
     .past-warning{font-size:.82rem;color:var(--booked-pi);background:rgba(90,32,32,.35);border:1px solid #7a3030;border-radius:6px;padding:8px 12px;margin-bottom:16px;}
@@ -142,21 +138,13 @@
     .admin-table td{padding:10px 14px;border-bottom:1px solid var(--border);color:var(--text-mid);}
     .admin-table tr:last-child td{border-bottom:none;}
     .admin-table tr:hover td{background:var(--surface2);}
-    .gcal-note{font-size:.85rem;color:var(--text-dim);margin-top:8px;line-height:1.5;}
-    .gcal-note a{color:var(--peach);}
-    .gcal-status{font-size:.8rem;padding:6px 10px;border-radius:6px;margin-top:8px;display:inline-block;}
-    .gcal-status.connected{background:rgba(61,77,66,.5);color:#9aba9a;border:1px solid #4e6254;}
-    .gcal-status.disconnected{background:rgba(80,50,30,.4);color:#d4a840;border:1px solid #a08030;}
     .multi-date-row{display:flex;align-items:center;gap:8px;margin-bottom:8px;flex-wrap:wrap;}
     .tag-chip{background:rgba(60,74,84,.8);border:1px solid var(--border-light);border-radius:6px;padding:4px 10px;font-size:.82rem;color:var(--text-mid);display:inline-flex;align-items:center;gap:6px;}
     .tag-chip button{background:none;border:none;color:#c07070;cursor:pointer;font-size:.85rem;padding:0;line-height:1;}
-    /* Make date/time picker icons visible on dark background */
     input[type="date"],input[type="time"]{color-scheme:dark;}
     #blockDateInput{color-scheme:dark;}
     .tag-chip button:hover{color:#e07070;}
 
-
-    /* Date picker modal for block dates */
     .date-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:14px;min-height:44px;}
     .date-grid-item{background:var(--surface);border:2px solid var(--border);border-radius:8px;padding:10px 12px;display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:.9rem;color:var(--text-mid);}
     .date-grid-item .date-val{font-weight:600;color:var(--text);}
@@ -164,9 +152,16 @@
     .date-grid-item .remove-date:hover{color:#e07070;}
     .date-grid-empty{color:var(--text-dim);font-size:.85rem;font-style:italic;grid-column:1/-1;padding:8px 0;}
 
-    /* EXPORT */
     .export-section{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:22px;margin-top:16px;}
     .export-row{display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end;margin-bottom:14px;}
+
+    /* Supabase status indicator */
+    .db-status{display:flex;align-items:center;gap:6px;font-size:.8rem;font-weight:600;}
+    .db-dot{width:8px;height:8px;border-radius:50%;background:var(--sage);}
+    .db-dot.connected{background:#6aba6a;box-shadow:0 0 6px rgba(106,186,106,.5);}
+    .db-dot.error{background:#e07070;}
+    .db-dot.loading{animation:pulse 1s infinite;}
+    @keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
 
     /* TOAST */
     .toast{position:fixed;bottom:28px;right:28px;background:var(--surface2);border:2px solid var(--peach);border-radius:10px;padding:13px 22px;font-size:1rem;font-weight:600;color:var(--peach);z-index:999;transform:translateY(80px);opacity:0;transition:all .3s cubic-bezier(.34,1.56,.64,1);}
@@ -191,7 +186,10 @@
     <p>Booking System · 30-min slots · Book up to 1 month ahead</p>
   </div>
   <div class="header-right">
-    <span style="font-size:1rem;color:var(--sage)" id="gcalIndicator">●</span>
+    <div class="db-status">
+      <div class="db-dot loading" id="dbDot"></div>
+      <span id="dbLabel" style="color:var(--text-dim)">Connecting…</span>
+    </div>
     <button class="btn btn-export" onclick="openExportModal()">Export</button>
     <button class="btn" onclick="showAdmin()">Admin</button>
   </div>
@@ -240,106 +238,11 @@
     <!-- Block management -->
     <div class="card">
       <div class="section-title" style="font-size:.9rem;margin-bottom:14px">Maintenance / Blocked Periods</div>
-      <!-- Add new block -->
       <div style="background:var(--surface2);border-radius:8px;padding:16px;margin-bottom:18px;">
         <div style="font-size:.85rem;font-weight:700;color:var(--text-mid);margin-bottom:12px;">Add Block</div>
         <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;margin-bottom:10px;">
-          <div class="form-group" style="margin:0"><label style="font-size:.78rem">Start Time</label><select id="blockStart" style="width:140px;background:var(--surface);border:2px solid var(--border);border-radius:8px;padding:8px 10px;font-family:'Google Sans',sans-serif;font-size:.9rem;color:var(--text);outline:none;"><option value="00:00">00:00</option>
-<option value="00:30">00:30</option>
-<option value="01:00">01:00</option>
-<option value="01:30">01:30</option>
-<option value="02:00">02:00</option>
-<option value="02:30">02:30</option>
-<option value="03:00">03:00</option>
-<option value="03:30">03:30</option>
-<option value="04:00">04:00</option>
-<option value="04:30">04:30</option>
-<option value="05:00">05:00</option>
-<option value="05:30">05:30</option>
-<option value="06:00">06:00</option>
-<option value="06:30">06:30</option>
-<option value="07:00">07:00</option>
-<option value="07:30">07:30</option>
-<option value="08:00">08:00</option>
-<option value="08:30">08:30</option>
-<option value="09:00">09:00</option>
-<option value="09:30">09:30</option>
-<option value="10:00">10:00</option>
-<option value="10:30">10:30</option>
-<option value="11:00">11:00</option>
-<option value="11:30">11:30</option>
-<option value="12:00">12:00</option>
-<option value="12:30">12:30</option>
-<option value="13:00">13:00</option>
-<option value="13:30">13:30</option>
-<option value="14:00">14:00</option>
-<option value="14:30">14:30</option>
-<option value="15:00">15:00</option>
-<option value="15:30">15:30</option>
-<option value="16:00">16:00</option>
-<option value="16:30">16:30</option>
-<option value="17:00">17:00</option>
-<option value="17:30">17:30</option>
-<option value="18:00">18:00</option>
-<option value="18:30">18:30</option>
-<option value="19:00">19:00</option>
-<option value="19:30">19:30</option>
-<option value="20:00">20:00</option>
-<option value="20:30">20:30</option>
-<option value="21:00">21:00</option>
-<option value="21:30">21:30</option>
-<option value="22:00">22:00</option>
-<option value="22:30">22:30</option>
-<option value="23:00">23:00</option>
-<option value="23:30">23:30</option></select></div>
-          <div class="form-group" style="margin:0"><label style="font-size:.78rem">End Time</label><select id="blockEnd" style="width:140px;background:var(--surface);border:2px solid var(--border);border-radius:8px;padding:8px 10px;font-family:'Google Sans',sans-serif;font-size:.9rem;color:var(--text);outline:none;"><option value="00:00">00:00</option>
-<option value="00:30">00:30</option>
-<option value="01:00">01:00</option>
-<option value="01:30">01:30</option>
-<option value="02:00">02:00</option>
-<option value="02:30">02:30</option>
-<option value="03:00">03:00</option>
-<option value="03:30">03:30</option>
-<option value="04:00">04:00</option>
-<option value="04:30">04:30</option>
-<option value="05:00">05:00</option>
-<option value="05:30">05:30</option>
-<option value="06:00">06:00</option>
-<option value="06:30">06:30</option>
-<option value="07:00">07:00</option>
-<option value="07:30">07:30</option>
-<option value="08:00">08:00</option>
-<option value="08:30">08:30</option>
-<option value="09:00">09:00</option>
-<option value="09:30">09:30</option>
-<option value="10:00">10:00</option>
-<option value="10:30">10:30</option>
-<option value="11:00">11:00</option>
-<option value="11:30">11:30</option>
-<option value="12:00">12:00</option>
-<option value="12:30">12:30</option>
-<option value="13:00">13:00</option>
-<option value="13:30">13:30</option>
-<option value="14:00">14:00</option>
-<option value="14:30">14:30</option>
-<option value="15:00">15:00</option>
-<option value="15:30">15:30</option>
-<option value="16:00">16:00</option>
-<option value="16:30">16:30</option>
-<option value="17:00">17:00</option>
-<option value="17:30">17:30</option>
-<option value="18:00">18:00</option>
-<option value="18:30">18:30</option>
-<option value="19:00">19:00</option>
-<option value="19:30">19:30</option>
-<option value="20:00">20:00</option>
-<option value="20:30">20:30</option>
-<option value="21:00">21:00</option>
-<option value="21:30">21:30</option>
-<option value="22:00">22:00</option>
-<option value="22:30">22:30</option>
-<option value="23:00">23:00</option>
-<option value="23:30">23:30</option></select></div>
+          <div class="form-group" style="margin:0"><label style="font-size:.78rem">Start Time</label><select id="blockStart" style="width:140px;background:var(--surface);border:2px solid var(--border);border-radius:8px;padding:8px 10px;font-family:'Google Sans',sans-serif;font-size:.9rem;color:var(--text);outline:none;"></select></div>
+          <div class="form-group" style="margin:0"><label style="font-size:.78rem">End Time</label><select id="blockEnd" style="width:140px;background:var(--surface);border:2px solid var(--border);border-radius:8px;padding:8px 10px;font-family:'Google Sans',sans-serif;font-size:.9rem;color:var(--text);outline:none;"></select></div>
           <div class="form-group" style="margin:0"><label style="font-size:.78rem">Reason</label><input type="text" id="blockReason" placeholder="e.g. Maintenance" style="width:180px"></div>
         </div>
         <div style="margin-bottom:10px;">
@@ -351,7 +254,6 @@
         </div>
         <button class="btn btn-primary" onclick="addBlock()">Save Block(s)</button>
       </div>
-      <!-- Existing blocks table -->
       <table class="admin-table" id="blocksTable">
         <thead><tr><th>Date</th><th>Time</th><th>Reason</th><th>Action</th></tr></thead>
         <tbody id="blocksTableBody"></tbody>
@@ -368,28 +270,6 @@
         <button class="btn btn-export" onclick="exportReportHTML()">Download HTML Report</button>
       </div>
       <p style="font-size:.82rem;color:var(--text-dim)">Report includes booking time, block/maintenance time per week and totals.</p>
-    </div>
-
-    <!-- Google Calendar -->
-    <div class="card">
-      <div class="section-title" style="font-size:.9rem;margin-bottom:14px">Google Calendar Sync</div>
-      <div id="gcalSyncStatus" class="gcal-status disconnected">Not connected — bookings will show an "Add to Calendar" link</div>
-      <div style="margin-top:16px">
-        <div class="form-group"><label>Google API Key</label><input type="text" id="apiKey" placeholder="AIzaSy..." style="max-width:420px"><p class="gcal-note">Required for automatic sync. <a href="https://console.cloud.google.com/" target="_blank">Get API Key →</a> Enable the Google Calendar API and restrict it to your domain.</p></div>
-        <div class="form-group"><label>Calendar ID</label><input type="text" id="calendarId" placeholder="yourlab@group.calendar.google.com" style="max-width:420px"><p class="gcal-note">Find in Google Calendar → Settings → your calendar → "Calendar ID". <a href="https://support.google.com/calendar/answer/37111" target="_blank">How to find →</a></p></div>
-        <button class="btn btn-primary" onclick="saveGCalConfig()">Save & Connect</button>
-        <button class="btn" style="margin-left:8px" onclick="testGCalConnection()">Test Connection</button>
-      </div>
-      <div style="margin-top:16px;padding:14px;background:rgba(60,74,84,.5);border-radius:8px;border:1px solid var(--border);">
-        <div style="font-size:.85rem;font-weight:700;color:var(--text-mid);margin-bottom:6px;">How sync works</div>
-        <ul style="font-size:.82rem;color:var(--text-dim);line-height:1.8;padding-left:18px;">
-          <li>When a booking is made → event is created on the calendar</li>
-          <li>When a booking is cancelled → event is deleted from the calendar</li>
-          <li>Requires an API key with Google Calendar API enabled</li>
-          <li>The calendar must be shared with the service account or set to public</li>
-          <li>If no API key is set, a manual "Add to Google Calendar" link is shown instead</li>
-        </ul>
-      </div>
     </div>
 
     <!-- Danger zone -->
@@ -410,109 +290,11 @@
     <div style="display:flex;gap:16px;margin-bottom:18px;flex-wrap:wrap;">
       <div class="form-group" style="margin:0;flex:1;min-width:140px;">
         <label>Start Time</label>
-        <select id="bookStartTime" onchange="updateBookSlotInfo()" style="background:var(--surface);border:2px solid var(--border);border-radius:8px;padding:8px 10px;font-family:'Google Sans',sans-serif;font-size:.95rem;color:var(--text);outline:none;min-height:44px;transition:border-color .15s;width:100%">
-<option value="00:00">00:00</option>
-<option value="00:30">00:30</option>
-<option value="01:00">01:00</option>
-<option value="01:30">01:30</option>
-<option value="02:00">02:00</option>
-<option value="02:30">02:30</option>
-<option value="03:00">03:00</option>
-<option value="03:30">03:30</option>
-<option value="04:00">04:00</option>
-<option value="04:30">04:30</option>
-<option value="05:00">05:00</option>
-<option value="05:30">05:30</option>
-<option value="06:00">06:00</option>
-<option value="06:30">06:30</option>
-<option value="07:00">07:00</option>
-<option value="07:30">07:30</option>
-<option value="08:00">08:00</option>
-<option value="08:30">08:30</option>
-<option value="09:00">09:00</option>
-<option value="09:30">09:30</option>
-<option value="10:00">10:00</option>
-<option value="10:30">10:30</option>
-<option value="11:00">11:00</option>
-<option value="11:30">11:30</option>
-<option value="12:00">12:00</option>
-<option value="12:30">12:30</option>
-<option value="13:00">13:00</option>
-<option value="13:30">13:30</option>
-<option value="14:00">14:00</option>
-<option value="14:30">14:30</option>
-<option value="15:00">15:00</option>
-<option value="15:30">15:30</option>
-<option value="16:00">16:00</option>
-<option value="16:30">16:30</option>
-<option value="17:00">17:00</option>
-<option value="17:30">17:30</option>
-<option value="18:00">18:00</option>
-<option value="18:30">18:30</option>
-<option value="19:00">19:00</option>
-<option value="19:30">19:30</option>
-<option value="20:00">20:00</option>
-<option value="20:30">20:30</option>
-<option value="21:00">21:00</option>
-<option value="21:30">21:30</option>
-<option value="22:00">22:00</option>
-<option value="22:30">22:30</option>
-<option value="23:00">23:00</option>
-<option value="23:30">23:30</option>
-        </select>
+        <select id="bookStartTime" onchange="updateBookSlotInfo()" style="background:var(--surface);border:2px solid var(--border);border-radius:8px;padding:8px 10px;font-family:'Google Sans',sans-serif;font-size:.95rem;color:var(--text);outline:none;min-height:44px;transition:border-color .15s;width:100%"></select>
       </div>
       <div class="form-group" style="margin:0;flex:1;min-width:140px;">
         <label>End Time</label>
-        <select id="bookEndTime" onchange="updateBookSlotInfo()" style="background:var(--surface);border:2px solid var(--border);border-radius:8px;padding:8px 10px;font-family:'Google Sans',sans-serif;font-size:.95rem;color:var(--text);outline:none;min-height:44px;transition:border-color .15s;width:100%">
-<option value="00:00">00:00</option>
-<option value="00:30">00:30</option>
-<option value="01:00">01:00</option>
-<option value="01:30">01:30</option>
-<option value="02:00">02:00</option>
-<option value="02:30">02:30</option>
-<option value="03:00">03:00</option>
-<option value="03:30">03:30</option>
-<option value="04:00">04:00</option>
-<option value="04:30">04:30</option>
-<option value="05:00">05:00</option>
-<option value="05:30">05:30</option>
-<option value="06:00">06:00</option>
-<option value="06:30">06:30</option>
-<option value="07:00">07:00</option>
-<option value="07:30">07:30</option>
-<option value="08:00">08:00</option>
-<option value="08:30">08:30</option>
-<option value="09:00">09:00</option>
-<option value="09:30">09:30</option>
-<option value="10:00">10:00</option>
-<option value="10:30">10:30</option>
-<option value="11:00">11:00</option>
-<option value="11:30">11:30</option>
-<option value="12:00">12:00</option>
-<option value="12:30">12:30</option>
-<option value="13:00">13:00</option>
-<option value="13:30">13:30</option>
-<option value="14:00">14:00</option>
-<option value="14:30">14:30</option>
-<option value="15:00">15:00</option>
-<option value="15:30">15:30</option>
-<option value="16:00">16:00</option>
-<option value="16:30">16:30</option>
-<option value="17:00">17:00</option>
-<option value="17:30">17:30</option>
-<option value="18:00">18:00</option>
-<option value="18:30">18:30</option>
-<option value="19:00">19:00</option>
-<option value="19:30">19:30</option>
-<option value="20:00">20:00</option>
-<option value="20:30">20:30</option>
-<option value="21:00">21:00</option>
-<option value="21:30">21:30</option>
-<option value="22:00">22:00</option>
-<option value="22:30">22:30</option>
-<option value="23:00">23:00</option>
-<option value="23:30">23:30</option>
-        </select>
+        <select id="bookEndTime" onchange="updateBookSlotInfo()" style="background:var(--surface);border:2px solid var(--border);border-radius:8px;padding:8px 10px;font-family:'Google Sans',sans-serif;font-size:.95rem;color:var(--text);outline:none;min-height:44px;transition:border-color .15s;width:100%"></select>
       </div>
     </div>
     <div id="bookConflictMsg" style="display:none;color:#e07070;font-size:.85rem;margin-bottom:12px;padding:8px 12px;background:rgba(90,32,32,.35);border-radius:6px;border:1px solid #7a3030;"></div>
@@ -557,20 +339,6 @@
   </div>
 </div>
 
-<!-- GCAL MODAL (manual link fallback) -->
-<div class="modal-overlay" id="gcalModal">
-  <div class="modal">
-    <button class="modal-close" onclick="closeModal('gcalModal')">✕</button>
-    <h3 style="color:var(--peach)">✓ Booking Confirmed!</h3>
-    <div class="slot-info" id="gcalSlotInfo" style="margin-top:14px"></div>
-    <p style="font-size:.9rem;color:var(--text-mid);margin-top:16px;margin-bottom:20px">Add this event to Google Calendar?</p>
-    <div class="modal-actions" style="justify-content:center;">
-      <a id="gcalLink" href="#" target="_blank" class="btn btn-primary" onclick="closeModal('gcalModal')" style="text-decoration:none">+ Add to Google Calendar</a>
-      <button class="btn" onclick="closeModal('gcalModal')">Skip</button>
-    </div>
-  </div>
-</div>
-
 <!-- EXPORT MODAL -->
 <div class="modal-overlay" id="exportModal">
   <div class="modal" style="max-width:420px">
@@ -607,73 +375,153 @@
 
 <script>
 // ══════════════════════════════════════════
-// CONFIG — change before deploying!
+// CONFIG — injected at build/deploy time via environment variables.
+// On GitHub Pages use a build step (e.g. sed / envsubst) to replace
+// these placeholders, OR host on Netlify/Vercel with their env injection.
+//
+// Required GitHub Secrets / env vars:
+//   SUPABASE_URL       — e.g. https://xyzxyz.supabase.co
+//   SUPABASE_ANON_KEY  — your project's public anon key
+//   ADMIN_PASSWORD     — admin panel password
 // ══════════════════════════════════════════
-const ADMIN_PASSWORD = 'hans305admin';
-const SLOT_H = 68;
-const TOGGLE_H = 33;
+const SUPABASE_URL      = 'https://zouicalllbffeynwldxq.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpvdWljYWxsbGJmZmV5bndsZHhxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAwNjM3MjMsImV4cCI6MjA5NTYzOTcyM30.UrTjcPxLb0egor5W8qcFaO_J8B-4gJH2VWjw_6eE5mU';
+const ADMIN_PASSWORD    = 'olsonflow@purdueHANS305';
 
+// ── Slot / time constants ─────────────────
+const SLOT_H               = 68;
 const SLOT_NIGHT_EARLY_START = 0,  SLOT_NIGHT_EARLY_END = 12;
-const SLOT_WORK_START = 18, SLOT_WORK_END = 33;
-const SLOT_NIGHT_LATE_START = 38, SLOT_NIGHT_LATE_END = 47;
-
-// ══════════════════════════════════════════
-// STATE
-// ══════════════════════════════════════════
-let currentWeekOffset = 0, pendingSlot = null, currentViewKey = null;
-let isAdminAuthed = false, nightEarlyExpanded = false, nightLateExpanded = false;
-let blockPendingDates = []; // for multi-date block adding
-
-const DAYS = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+const SLOT_WORK_START        = 18, SLOT_WORK_END        = 33;
+const SLOT_NIGHT_LATE_START  = 38, SLOT_NIGHT_LATE_END  = 47;
+const DAYS   = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
 const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 
 // ══════════════════════════════════════════
-// STORAGE HELPERS
+// SUPABASE CLIENT
 // ══════════════════════════════════════════
-function getBookings()   { return JSON.parse(localStorage.getItem('fc_bookings')||'{}'); }
-function saveBookings(b) { localStorage.setItem('fc_bookings',JSON.stringify(b)); }
-function getBlocks()     { return JSON.parse(localStorage.getItem('fc_blocks')||'[]'); }
-function saveBlocks(b)   { localStorage.setItem('fc_blocks',JSON.stringify(b)); }
-function getGCalConfig() { return JSON.parse(localStorage.getItem('fc_gcal')||'{}'); }
+const { createClient } = supabase;
+const db = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-function slotToLabel(s) { return `${String(Math.floor(s/2)).padStart(2,'0')}:${s%2===0?'00':'30'}`; }
-function dateKey(d)     { return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; }
+// ══════════════════════════════════════════
+// IN-MEMORY STATE  (loaded from Supabase on init, kept in sync via realtime)
+// ══════════════════════════════════════════
+let bookingsMap = {};  // key: "YYYY-MM-DD_slot" → booking row object
+let blocksList  = [];  // array of block row objects
+
+let currentWeekOffset = 0, pendingSlot = null, currentViewKey = null;
+let isAdminAuthed = false, nightEarlyExpanded = false, nightLateExpanded = false;
+let blockPendingDates = [];
+
+// ══════════════════════════════════════════
+// UTILITIES
+// ══════════════════════════════════════════
+function slotToLabel(s){ return `${String(Math.floor(s/2)).padStart(2,'0')}:${s%2===0?'00':'30'}`; }
+function dateKey(d)    { return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; }
 function bookingKey(ds,s){ return `${ds}_${s}`; }
-function escHtml(s)     { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function escHtml(s)    { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 function makeClusterKey(){ return `ck_${Date.now()}_${Math.random().toString(36).slice(2,7)}`; }
+function timeStrToSlot(t){ const[h,m]=t.split(':').map(Number); return h*2+(m>=30?1:0); }
 
 function isSlotPast(dateObj,slot){
   const t=new Date(dateObj); t.setHours(Math.floor(slot/2),slot%2===0?0:30,0,0); return t<new Date();
 }
 function isSlotBlocked(dateStr,slot){
   const sm=slot*30;
-  for(const b of getBlocks()){
-    if(b.date!==dateStr)continue;
-    const[sh,sm2]=b.start.split(':').map(Number);
-    const[eh,em]=b.end.split(':').map(Number);
-    if(sm>=sh*60+sm2&&sm<eh*60+em)return b;
+  for(const b of blocksList){
+    if(b.date_str!==dateStr) continue;
+    const[sh,sm2]=b.start_time.split(':').map(Number);
+    const[eh,em] =b.end_time.split(':').map(Number);
+    if(sm>=sh*60+sm2 && sm<eh*60+em) return b;
   }
   return null;
 }
 function isWithinBookingWindow(date){
-  const now=new Date();now.setHours(0,0,0,0);
-  const lim=new Date(now);lim.setDate(lim.getDate()+31);
-  return date>=now&&date<lim;
+  const now=new Date(); now.setHours(0,0,0,0);
+  const lim=new Date(now); lim.setDate(lim.getDate()+31);
+  return date>=now && date<lim;
 }
 function isNightEarly(s){return s>=SLOT_NIGHT_EARLY_START&&s<=SLOT_NIGHT_EARLY_END;}
-function isNightLate(s) {return s>=SLOT_NIGHT_LATE_START&&s<=SLOT_NIGHT_LATE_END;}
-function isWorkHour(s)  {return s>=SLOT_WORK_START&&s<=SLOT_WORK_END;}
-function getClusterKeys(bk,rootKey){
-  const b=bk[rootKey]; if(!b||!b.clusterKey)return[rootKey];
-  return Object.keys(bk).filter(k=>bk[k].clusterKey===b.clusterKey);
+function isNightLate(s) {return s>=SLOT_NIGHT_LATE_START &&s<=SLOT_NIGHT_LATE_END;}
+function isWorkHour(s)  {return s>=SLOT_WORK_START        &&s<=SLOT_WORK_END;}
+
+// ══════════════════════════════════════════
+// SUPABASE DATA LOADING
+// ══════════════════════════════════════════
+async function loadAllData(){
+  setDbStatus('loading');
+  try {
+    const [bRes, blRes] = await Promise.all([
+      db.from('bookings').select('*'),
+      db.from('blocks').select('*')
+    ]);
+    if(bRes.error)  throw bRes.error;
+    if(blRes.error) throw blRes.error;
+
+    // Rebuild bookingsMap
+    bookingsMap = {};
+    for(const row of bRes.data){
+      bookingsMap[bookingKey(row.date_str, row.slot)] = row;
+    }
+    blocksList = blRes.data;
+    setDbStatus('connected');
+    renderCalendar();
+  } catch(e){
+    console.error('Supabase load error:', e);
+    setDbStatus('error');
+    showToast('Database error: ' + e.message, true);
+  }
+}
+
+function setDbStatus(state){
+  const dot   = document.getElementById('dbDot');
+  const label = document.getElementById('dbLabel');
+  dot.className   = 'db-dot ' + state;
+  label.textContent = state==='connected' ? 'Live' : state==='error' ? 'Database Error' : 'Connecting…';
+  label.style.color = state==='connected' ? '#6aba6a' : state==='error' ? '#e07070' : 'var(--text-dim)';
+}
+
+// ══════════════════════════════════════════
+// REALTIME SUBSCRIPTIONS
+// ══════════════════════════════════════════
+function subscribeRealtime(){
+  db.channel('booking-changes')
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'bookings' }, payload => {
+      handleBookingChange(payload);
+    })
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'blocks' }, payload => {
+      handleBlockChange(payload);
+    })
+    .subscribe();
+}
+
+function handleBookingChange(payload){
+  const { eventType, new: newRow, old: oldRow } = payload;
+  if(eventType === 'INSERT' || eventType === 'UPDATE'){
+    bookingsMap[bookingKey(newRow.date_str, newRow.slot)] = newRow;
+  } else if(eventType === 'DELETE'){
+    delete bookingsMap[bookingKey(oldRow.date_str, oldRow.slot)];
+  }
+  renderCalendar();
+  if(isAdminAuthed) renderAdminPanel();
+}
+
+function handleBlockChange(payload){
+  const { eventType, new: newRow, old: oldRow } = payload;
+  if(eventType === 'INSERT'){
+    blocksList.push(newRow);
+  } else if(eventType === 'DELETE'){
+    blocksList = blocksList.filter(b => b.id !== oldRow.id);
+  }
+  renderCalendar();
+  if(isAdminAuthed) renderBlocksTable();
 }
 
 // ══════════════════════════════════════════
 // WEEK NAV
 // ══════════════════════════════════════════
 function getWeekStart(offset=0){
-  const t=new Date();t.setHours(0,0,0,0);
-  t.setDate(t.getDate()-t.getDay()+offset*7);return t;
+  const t=new Date(); t.setHours(0,0,0,0);
+  t.setDate(t.getDate()-t.getDay()+offset*7); return t;
 }
 function changeWeek(dir){currentWeekOffset+=dir;renderCalendar();}
 function goToday(){currentWeekOffset=0;renderCalendar();}
@@ -691,9 +539,7 @@ function renderCalendar(){
     `${MONTHS[ws.getMonth()]} ${ws.getDate()} – ${MONTHS[we.getMonth()]} ${we.getDate()}, ${we.getFullYear()}`;
   document.getElementById('prevWeekBtn').disabled=currentWeekOffset<=0;
 
-  const today=new Date();today.setHours(0,0,0,0);
-  const bookings=getBookings();
-
+  const today=new Date(); today.setHours(0,0,0,0);
   const cal=document.getElementById('calendar');
   let html='';
 
@@ -706,10 +552,9 @@ function renderCalendar(){
   }
   html+='</div>';
 
-  // Body wrapper — no overlay, content goes directly into cells
   html+=`<div class="cal-rows-wrapper">`;
 
-  // Early toggle
+  // Early off-hours toggle
   html+=`<div class="offhours-toggle-row" onclick="toggleNightEarly()">
     <div class="offhours-toggle-label${nightEarlyExpanded?' expanded':''}">
       <span class="toggle-icon">▶</span>
@@ -724,66 +569,57 @@ function renderCalendar(){
           <span>${nightLateExpanded?'Hide':'Show'} off-hours &nbsp;<strong>19:00 – 23:30</strong></span>
         </div></div>`;
     }
-    if(isNightEarly(s)&&!nightEarlyExpanded)continue;
-    if(isNightLate(s) &&!nightLateExpanded) continue;
+    if(isNightEarly(s)&&!nightEarlyExpanded) continue;
+    if(isNightLate(s) &&!nightLateExpanded)  continue;
 
-    const wH=isWorkHour(s),nH=isNightEarly(s)||isNightLate(s);
+    const wH=isWorkHour(s), nH=isNightEarly(s)||isNightLate(s);
     html+=`<div class="cal-row">`;
     html+=`<div class="time-label${wH?' work':nH?' off':''}">${slotToLabel(s)}</div>`;
 
     for(const d of days){
       const dKey=dateKey(d);
       const bKey=bookingKey(dKey,s);
-      const booking=bookings[bKey];
+      const booking=bookingsMap[bKey];
       const past=isSlotPast(d,s);
       const blocked=isSlotBlocked(dKey,s);
       const inWin=isWithinBookingWindow(d);
 
       let cls='time-slot';
-      if(wH)cls+=' work-hours'; else if(nH)cls+=' off-hours'; else cls+=' normal';
+      if(wH) cls+=' work-hours'; else if(nH) cls+=' off-hours'; else cls+=' normal';
 
       if(blocked){
-        // Determine cluster position for blocked slot
-        const[sh,sm2]=blocked.start.split(':').map(Number);
-        const[eh,em]=blocked.end.split(':').map(Number);
+        const[sh,sm2]=blocked.start_time.split(':').map(Number);
+        const[eh,em] =blocked.end_time.split(':').map(Number);
         const bSS=sh*2+(sm2>=30?1:0);
         const bES=Math.max(0,(eh*2+(em>0?1:0))-1);
-        const isFirst=(s===bSS);
-        const isLast=(s===bES);
+        const isFirst=(s===bSS), isLast=(s===bES);
         cls+=' blocked-cell';
         if(bSS!==bES){
-          if(isFirst)cls+=' cluster-top';
-          else if(isLast)cls+=' cluster-bot';
+          if(isFirst) cls+=' cluster-top';
+          else if(isLast) cls+=' cluster-bot';
           else cls+=' cluster-mid';
         }
         const inner=isFirst
           ?`<span class="bk-name">${escHtml(blocked.reason||'Blocked')}</span>
-            <span class="bk-period">${blocked.start} – ${blocked.end}</span>`
-          :'';
+            <span class="bk-period">${blocked.start_time} – ${blocked.end_time}</span>`:'';
         html+=`<div class="${cls}" onclick="showToast('Blocked: ${escHtml(blocked.reason||'Maintenance')}',true)">${inner}</div>`;
 
       } else if(booking){
         const isPastCell=past;
         cls+=' booked-cell'+(isPastCell?' past':'');
-
-        // Determine cluster position
-        const ck=booking.clusterKey;
-        const clStart=booking.clusterStart!==undefined?booking.clusterStart:s;
-        const clEnd  =booking.clusterEnd  !==undefined?booking.clusterEnd  :s;
-        const isFirst=(s===clStart);
-        const isLast=(s===clEnd);
+        const clStart=booking.cluster_start!==null&&booking.cluster_start!==undefined?booking.cluster_start:s;
+        const clEnd  =booking.cluster_end  !==null&&booking.cluster_end  !==undefined?booking.cluster_end  :s;
+        const isFirst=(s===clStart), isLast=(s===clEnd);
         if(clStart!==clEnd){
-          if(isFirst)cls+=' cluster-top';
-          else if(isLast)cls+=' cluster-bot';
+          if(isFirst) cls+=' cluster-top';
+          else if(isLast) cls+=' cluster-bot';
           else cls+=' cluster-mid';
         }
         const timeStr=`${slotToLabel(clStart)} – ${slotToLabel(clEnd+1)}`;
-        // Only first slot shows text; middle/bottom slots show colour only
         const inner=isFirst
           ?`<span class="bk-name">${escHtml(booking.name)}</span>
             <span class="bk-pi">${escHtml(booking.pi)}</span>
-            <span class="bk-period">${timeStr}</span>`
-          :'';
+            <span class="bk-period">${timeStr}</span>`:'';
         html+=`<div class="${cls}" onclick="openViewModal('${bKey}','${dKey}',${clStart})">${inner}</div>`;
 
       } else if(past||!inWin){
@@ -795,10 +631,8 @@ function renderCalendar(){
     }
     html+='</div>';
   }
-  html+='</div>'; // rows-wrapper
-
+  html+='</div>';
   cal.innerHTML=html;
-  updateGCalIndicator();
 }
 
 // ══════════════════════════════════════════
@@ -806,99 +640,89 @@ function renderCalendar(){
 // ══════════════════════════════════════════
 function openBookModal(dateStr,slot){
   pendingSlot={dateStr,slot:parseInt(slot)};
-  // Pre-set start time from clicked slot; end time = start + 30min
-  const startLabel=slotToLabel(parseInt(slot));
-  const endLabel=slotToLabel(Math.min(parseInt(slot)+1,47));
-  document.getElementById('bookStartTime').value=startLabel;
-  document.getElementById('bookEndTime').value=endLabel;
-  document.getElementById('bookName').value=localStorage.getItem('fc_name')||'';
-  document.getElementById('bookPI').value=localStorage.getItem('fc_pi')||'';
+  document.getElementById('bookStartTime').value=slotToLabel(parseInt(slot));
+  document.getElementById('bookEndTime').value  =slotToLabel(Math.min(parseInt(slot)+1,47));
+  document.getElementById('bookName').value =localStorage.getItem('fc_name')||'';
+  document.getElementById('bookPI').value   =localStorage.getItem('fc_pi')||'';
   document.getElementById('bookNotes').value='';
   updateBookSlotInfo();
   openModal('bookModal');
 }
-function timeStrToSlot(t){
-  const[h,m]=t.split(':').map(Number);
-  return h*2+(m>=30?1:0);
-}
+
 function updateBookSlotInfo(){
-  if(!pendingSlot)return;
+  if(!pendingSlot) return;
   const{dateStr}=pendingSlot;
   const startTime=document.getElementById('bookStartTime').value;
-  const endTime=document.getElementById('bookEndTime').value;
+  const endTime  =document.getElementById('bookEndTime').value;
   const startSlot=timeStrToSlot(startTime);
-  const endSlot=timeStrToSlot(endTime);
+  const endSlot  =timeStrToSlot(endTime);
   const count=endSlot-startSlot;
   const[y,m,d]=dateStr.split('-');
   const label=`${DAYS[new Date(dateStr+'T12:00:00').getDay()]}, ${MONTHS[Number(m)-1]} ${Number(d)}, ${y}`;
   document.getElementById('bookSlotInfo').textContent=`${label}  ·  ${startTime} – ${endTime}`;
-  // Update pendingSlot.slot to reflect chosen start
   pendingSlot.slot=startSlot;
   const msgEl=document.getElementById('bookConflictMsg');
-  const btn=document.getElementById('confirmBookBtn');
+  const btn  =document.getElementById('confirmBookBtn');
   if(count<=0){
-    msgEl.textContent='End time must be after start time.';
-    msgEl.style.display='block';
-    btn.disabled=true;btn.style.opacity='0.5';
-    return;
+    msgEl.textContent='End time must be after start time.'; msgEl.style.display='block';
+    btn.disabled=true; btn.style.opacity='0.5'; return;
   }
   if(count>16){
-    msgEl.textContent='Maximum booking duration is 8 hours.';
-    msgEl.style.display='block';
-    btn.disabled=true;btn.style.opacity='0.5';
-    return;
+    msgEl.textContent='Maximum booking duration is 8 hours.'; msgEl.style.display='block';
+    btn.disabled=true; btn.style.opacity='0.5'; return;
   }
-  const bk=getBookings();
-  let conflict=false,msg='';
+  let conflict=false, msg='';
   for(let s=startSlot;s<endSlot;s++){
     if(s>47){conflict=true;msg='Duration extends past midnight.';break;}
-    if(bk[bookingKey(dateStr,s)]){conflict=true;msg=`${slotToLabel(s)} is already booked.`;break;}
+    if(bookingsMap[bookingKey(dateStr,s)]){conflict=true;msg=`${slotToLabel(s)} is already booked.`;break;}
     const bl=isSlotBlocked(dateStr,s);
     if(bl){conflict=true;msg=`${slotToLabel(s)} is blocked (${bl.reason||'maintenance'}).`;break;}
   }
   msgEl.style.display=conflict?'block':'none';
-  if(conflict)msgEl.textContent=msg;
-  btn.disabled=conflict;btn.style.opacity=conflict?'0.5':'1';
+  if(conflict) msgEl.textContent=msg;
+  btn.disabled=conflict; btn.style.opacity=conflict?'0.5':'1';
 }
-function confirmBooking(){
-  const name=document.getElementById('bookName').value.trim();
-  const pi=document.getElementById('bookPI').value.trim();
+
+async function confirmBooking(){
+  const name =document.getElementById('bookName').value.trim();
+  const pi   =document.getElementById('bookPI').value.trim();
   const notes=document.getElementById('bookNotes').value.trim();
   if(!name){document.getElementById('bookName').focus();return;}
-  if(!pi){document.getElementById('bookPI').focus();return;}
+  if(!pi)  {document.getElementById('bookPI').focus();return;}
   const startTime=document.getElementById('bookStartTime').value;
-  const endTime=document.getElementById('bookEndTime').value;
+  const endTime  =document.getElementById('bookEndTime').value;
   const startSlot=timeStrToSlot(startTime);
-  const endSlot=timeStrToSlot(endTime);
+  const endSlot  =timeStrToSlot(endTime);
   const count=endSlot-startSlot;
   if(count<=0||count>16){showToast('Invalid time range.',true);return;}
   const{dateStr}=pendingSlot;
-  const slot=startSlot;
-  const bk=getBookings();
   const ck=count>1?makeClusterKey():null;
-  for(let s=slot;s<slot+count;s++){
-    bk[bookingKey(dateStr,s)]={name,pi,notes,dateStr,slot:s,clusterKey:ck,clusterStart:slot,clusterEnd:slot+count-1,bookedAt:new Date().toISOString()};
-  }
-  saveBookings(bk);
-  localStorage.setItem('fc_name',name);localStorage.setItem('fc_pi',pi);
-  closeModal('bookModal');
-  renderCalendar();
-  const cfg=getGCalConfig();
-  if(cfg.apiKey&&cfg.calendarId){
-    gcalCreateEvent(dateStr,slot,slot+count,name,pi,notes).then(eventId=>{
-      if(eventId){
-        const bk2=getBookings();
-        for(let s=slot;s<slot+count;s++){
-          if(bk2[bookingKey(dateStr,s)])bk2[bookingKey(dateStr,s)].gcalEventId=eventId;
-        }
-        saveBookings(bk2);
-        showToast('Booking confirmed & synced to Google Calendar!');
-      } else {
-        showGCalModal(dateStr,slot,slot+count,name,pi);
-      }
+
+  // Build rows for all slots in the booking
+  const rows=[];
+  for(let s=startSlot;s<startSlot+count;s++){
+    rows.push({
+      date_str:dateStr, slot:s,
+      cluster_key:ck, cluster_start:startSlot, cluster_end:startSlot+count-1,
+      name, pi, notes,
+      booked_at:new Date().toISOString()
     });
-  } else {
-    showGCalModal(dateStr,slot,slot+count,name,pi);
+  }
+
+  const btn=document.getElementById('confirmBookBtn');
+  btn.disabled=true; btn.textContent='Saving…';
+  try {
+    const {error}=await db.from('bookings').insert(rows);
+    if(error) throw error;
+    localStorage.setItem('fc_name',name); localStorage.setItem('fc_pi',pi);
+    closeModal('bookModal');
+    showToast('Booking confirmed!');
+    // Realtime will update the calendar automatically
+  } catch(e){
+    console.error('Booking error:',e);
+    showToast('Failed to save booking: ' + (e.message||e), true);
+  } finally {
+    btn.disabled=false; btn.textContent='Confirm Booking';
   }
 }
 
@@ -906,133 +730,58 @@ function confirmBooking(){
 // VIEW MODAL
 // ══════════════════════════════════════════
 function openViewModal(bKey,dateStr,slot){
-  const bk=getBookings();const b=bk[bKey];if(!b)return;
+  const b=bookingsMap[bKey]; if(!b) return;
   currentViewKey=bKey;
   const past=isSlotPast(new Date(dateStr+'T12:00:00'),parseInt(slot));
   const[y,m,d]=dateStr.split('-');
   const label=`${DAYS[new Date(dateStr+'T12:00:00').getDay()]}, ${MONTHS[Number(m)-1]} ${Number(d)}, ${y}`;
-  const startSlot=b.clusterStart!==undefined?b.clusterStart:parseInt(slot);
-  const endSlot  =b.clusterEnd  !==undefined?b.clusterEnd+1:parseInt(slot)+1;
+  const startSlot=b.cluster_start!==null&&b.cluster_start!==undefined?b.cluster_start:parseInt(slot);
+  const endSlot  =b.cluster_end  !==null&&b.cluster_end  !==undefined?b.cluster_end+1:parseInt(slot)+1;
   document.getElementById('viewSlotInfo').textContent=`${label}  ·  ${slotToLabel(startSlot)} – ${slotToLabel(endSlot)}`;
   document.getElementById('viewPastWarning').style.display=past?'block':'none';
   document.getElementById('viewDetails').innerHTML=`
     <p><span>Name</span><span>${escHtml(b.name)}</span></p>
     <p><span>PI / Lab</span><span>${escHtml(b.pi)}</span></p>
     <p><span>Booking</span><span>${slotToLabel(startSlot)} – ${slotToLabel(endSlot)}</span></p>
-    <p><span>Booked at</span><span>${new Date(b.bookedAt).toLocaleString()}</span></p>
+    <p><span>Booked at</span><span>${new Date(b.booked_at).toLocaleString()}</span></p>
   `;
   document.getElementById('viewNotesInput').value=b.notes||'';
   document.getElementById('cancelBookingBtn').style.display=(!past||isAdminAuthed)?'inline-flex':'none';
   openModal('viewModal');
 }
-function saveNotes(){
-  if(!currentViewKey)return;
-  const bk=getBookings();const b=bk[currentViewKey];if(!b)return;
+
+async function saveNotes(){
+  if(!currentViewKey) return;
+  const b=bookingsMap[currentViewKey]; if(!b) return;
   const note=document.getElementById('viewNotesInput').value.trim();
-  if(b.clusterKey)Object.keys(bk).forEach(k=>{if(bk[k].clusterKey===b.clusterKey)bk[k].notes=note;});
-  else b.notes=note;
-  saveBookings(bk);renderCalendar();showToast('Notes saved.');
+  // Update all slots in the cluster
+  const filter=b.cluster_key
+    ? db.from('bookings').update({notes:note}).eq('cluster_key',b.cluster_key)
+    : db.from('bookings').update({notes:note}).eq('id',b.id);
+  const{error}=await filter;
+  if(error){showToast('Failed to save notes.',true);return;}
+  showToast('Notes saved.');
+  // Realtime handles the local state update
 }
-function cancelCurrentBooking(){
-  if(!currentViewKey)return;
-  const bk=getBookings();const b=bk[currentViewKey];if(!b)return;
-  const past=isSlotPast(new Date(b.dateStr+'T12:00:00'),b.slot);
+
+async function cancelCurrentBooking(){
+  if(!currentViewKey) return;
+  const b=bookingsMap[currentViewKey]; if(!b) return;
+  const past=isSlotPast(new Date(b.date_str+'T12:00:00'),b.slot);
   if(past&&!isAdminAuthed){showToast('Past bookings can only be cancelled by an admin.',true);return;}
-  const keys=getClusterKeys(bk,currentViewKey);
-  const dur=keys.length>1?` (${keys.length} slots / ${keys.length*30} min)`:'';
-  if(!confirm(`Cancel this booking${dur}?`))return;
-  // GCal delete
-  const gcalEventId=b.gcalEventId;
-  const cfg=getGCalConfig();
-  if(gcalEventId&&cfg.apiKey&&cfg.calendarId){
-    gcalDeleteEvent(gcalEventId).then(()=>{showToast('Booking cancelled & removed from Google Calendar.');});
-  } else {
-    showToast('Booking cancelled.');
-  }
-  keys.forEach(k=>delete bk[k]);
-  saveBookings(bk);closeModal('viewModal');renderCalendar();
-  if(isAdminAuthed)renderAdminPanel();
-}
+  const clusterSlots=b.cluster_key
+    ? Object.values(bookingsMap).filter(r=>r.cluster_key===b.cluster_key)
+    : [b];
+  const dur=clusterSlots.length>1?` (${clusterSlots.length} slots / ${clusterSlots.length*30} min)`:'';
+  if(!confirm(`Cancel this booking${dur}?`)) return;
 
-// ══════════════════════════════════════════
-// GOOGLE CALENDAR API
-// ══════════════════════════════════════════
-function updateGCalIndicator(){
-  const cfg=getGCalConfig();
-  const el=document.getElementById('gcalIndicator');
-  if(cfg.apiKey&&cfg.calendarId){
-    el.title='Google Calendar: Connected';
-    el.style.color='#9aba9a';
-  } else {
-    el.title='Google Calendar: Not connected';
-    el.style.color='var(--sage)';
-  }
-}
-
-async function gcalCreateEvent(dateStr,startSlot,endSlot,name,pi,notes){
-  const cfg=getGCalConfig();
-  if(!cfg.apiKey||!cfg.calendarId)return null;
-  const[y,m,d]=dateStr.split('-');
-  const fmt=s=>`${String(Math.floor(s/2)).padStart(2,'0')}:${s%2===0?'00':'30'}:00`;
-  const startDT=`${y}-${m}-${d}T${fmt(startSlot)}`;
-  const endDT  =`${y}-${m}-${d}T${fmt(Math.min(endSlot,48))}`;
-  const event={
-    summary:`Flow Cytometer – ${name} (${pi})`,
-    location:'HANS 305',
-    description:`Booked via HANS 305 Booking System\nUser: ${name}\nPI: ${pi}${notes?'\nNotes: '+notes:''}`,
-    start:{dateTime:startDT,timeZone:Intl.DateTimeFormat().resolvedOptions().timeZone},
-    end:  {dateTime:endDT,  timeZone:Intl.DateTimeFormat().resolvedOptions().timeZone}
-  };
-  try{
-    const r=await fetch(
-      `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(cfg.calendarId)}/events?key=${cfg.apiKey}`,
-      {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(event)}
-    );
-    if(!r.ok)throw new Error(await r.text());
-    const data=await r.json();
-    return data.id||null;
-  }catch(e){
-    console.error('GCal create error:',e);
-    return null;
-  }
-}
-
-async function gcalDeleteEvent(eventId){
-  const cfg=getGCalConfig();
-  if(!cfg.apiKey||!cfg.calendarId||!eventId)return;
-  try{
-    await fetch(
-      `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(cfg.calendarId)}/events/${eventId}?key=${cfg.apiKey}`,
-      {method:'DELETE'}
-    );
-  }catch(e){console.error('GCal delete error:',e);}
-}
-
-function showGCalModal(dateStr,startSlot,endSlot,name,pi){
-  const[y,m,d]=dateStr.split('-');
-  const label=`${DAYS[new Date(dateStr+'T12:00:00').getDay()]}, ${MONTHS[Number(m)-1]} ${Number(d)}, ${y}`;
-  document.getElementById('gcalSlotInfo').textContent=`${label}  ·  ${slotToLabel(startSlot)} – ${slotToLabel(Math.min(endSlot,48))}`;
-  const fmt=s=>`${String(Math.floor(s/2)).padStart(2,'0')}${s%2===0?'00':'30'}00`;
-  const start=`${y}${m}${d}T${fmt(startSlot)}`;
-  const end=`${y}${m}${d}T${fmt(Math.min(endSlot,48))}`;
-  const title=encodeURIComponent(`Flow Cytometer – ${name} (${pi})`);
-  const det=encodeURIComponent(`Booked via HANS 305\nUser: ${name}\nPI: ${pi}`);
-  const loc=encodeURIComponent('HANS 305');
-  const cfg=getGCalConfig();
-  const calP=cfg.calendarId?`&src=${encodeURIComponent(cfg.calendarId)}`:'';
-  document.getElementById('gcalLink').href=`https://calendar.google.com/calendar/render?action=TEMPLATE&text=${title}&dates=${start}/${end}&details=${det}&location=${loc}${calP}`;
-  openModal('gcalModal');
-}
-
-async function testGCalConnection(){
-  const cfg=getGCalConfig();
-  if(!cfg.apiKey||!cfg.calendarId){showToast('Save API Key and Calendar ID first.',true);return;}
-  try{
-    const r=await fetch(`https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(cfg.calendarId)}?key=${cfg.apiKey}`);
-    const data=await r.json();
-    if(data.id){showToast(`Connected! Calendar: "${data.summary||data.id}"`); document.getElementById('gcalSyncStatus').className='gcal-status connected';document.getElementById('gcalSyncStatus').textContent='Connected — bookings will auto-sync to Google Calendar';}
-    else{showToast('Connection failed: '+(data.error?.message||'Unknown error'),true);}
-  }catch(e){showToast('Connection error: '+e.message,true);}
+  const{error}=b.cluster_key
+    ? await db.from('bookings').delete().eq('cluster_key',b.cluster_key)
+    : await db.from('bookings').delete().eq('id',b.id);
+  if(error){showToast('Failed to cancel booking.',true);return;}
+  closeModal('viewModal');
+  showToast('Booking cancelled.');
+  // Realtime handles UI update
 }
 
 // ══════════════════════════════════════════
@@ -1049,70 +798,61 @@ function checkAdminPw(){
     renderAdminPanel();document.getElementById('bookingPage').classList.add('hidden');document.getElementById('adminPanel').classList.add('open');
   }else{showToast('Incorrect password.',true);document.getElementById('adminPassword').value='';document.getElementById('adminPassword').focus();}
 }
+
 function renderAdminPanel(){
-  // Bookings
-  const bk=getBookings();
+  // Bookings — deduplicate by cluster
   const seen=new Set();
-  const entries=Object.entries(bk).sort((a,b)=>a[0].localeCompare(b[0])).filter(([k,b])=>{
-    const id=b.clusterKey||k;if(seen.has(id))return false;seen.add(id);return true;
-  });
+  const entries=Object.entries(bookingsMap)
+    .sort((a,b)=>a[0].localeCompare(b[0]))
+    .filter(([k,b])=>{
+      const id=b.cluster_key||k; if(seen.has(id))return false; seen.add(id); return true;
+    });
   const tbody=document.getElementById('adminTableBody');
   tbody.innerHTML=entries.length?entries.map(([key,b])=>{
-    const[ds,ss]=key.split('_');const sl=Number(ss);
-    const[y,m,d]=ds.split('-');const dl=`${MONTHS[Number(m)-1]} ${Number(d)}, ${y}`;
-    const st=b.clusterStart!==undefined?b.clusterStart:sl;
-    const en=b.clusterEnd  !==undefined?b.clusterEnd+1:sl+1;
+    const[ds]=key.split('_');
+    const[y,m,d]=ds.split('-'); const dl=`${MONTHS[Number(m)-1]} ${Number(d)}, ${y}`;
+    const st=b.cluster_start!==null&&b.cluster_start!==undefined?b.cluster_start:b.slot;
+    const en=b.cluster_end  !==null&&b.cluster_end  !==undefined?b.cluster_end+1:b.slot+1;
     return `<tr><td>${dl}</td><td>${slotToLabel(st)} – ${slotToLabel(en)}</td><td>${(en-st)*30}m</td>
       <td style="color:var(--linen);font-weight:600">${escHtml(b.name)}</td>
       <td>${escHtml(b.pi)}</td><td>${escHtml(b.notes||'—')}</td>
       <td><button class="btn btn-danger" style="padding:5px 12px;font-size:.82rem;min-height:34px" onclick="adminCancel('${key}')">Cancel</button></td></tr>`;
   }).join(''):'<tr><td colspan="7" style="color:var(--text-dim);text-align:center;padding:20px">No bookings yet.</td></tr>';
 
-  // Blocks table
   renderBlocksTable();
 
-  // GCal config
-  const cfg=getGCalConfig();
-  if(cfg.calendarId)document.getElementById('calendarId').value=cfg.calendarId;
-  if(cfg.apiKey)document.getElementById('apiKey').value=cfg.apiKey;
-  if(cfg.apiKey&&cfg.calendarId){
-    document.getElementById('gcalSyncStatus').className='gcal-status connected';
-    document.getElementById('gcalSyncStatus').textContent='Connected — bookings will auto-sync to Google Calendar';
-  }
-
   // Export defaults
-  const now=new Date();
   const wd=getWeekStart(0);
   document.getElementById('exportFrom').value=dateKey(wd);
-  const we2=new Date(wd);we2.setDate(we2.getDate()+6);
+  const we2=new Date(wd); we2.setDate(we2.getDate()+6);
   document.getElementById('exportTo').value=dateKey(we2);
 }
 
 function renderBlocksTable(){
-  const blocks=getBlocks().sort((a,b)=>a.date.localeCompare(b.date)||a.start.localeCompare(b.start));
+  const sorted=[...blocksList].sort((a,b)=>a.date_str.localeCompare(b.date_str)||a.start_time.localeCompare(b.start_time));
   const tbody=document.getElementById('blocksTableBody');
-  tbody.innerHTML=blocks.length?blocks.map((bl,i)=>{
-    const[y,m,d]=bl.date.split('-');
+  tbody.innerHTML=sorted.length?sorted.map(bl=>{
+    const[y,m,d]=bl.date_str.split('-');
     return `<tr>
       <td>${MONTHS[Number(m)-1]} ${Number(d)}, ${y}</td>
-      <td>${bl.start} – ${bl.end}</td>
+      <td>${bl.start_time} – ${bl.end_time}</td>
       <td>${escHtml(bl.reason||'Blocked')}</td>
-      <td><button class="btn btn-danger" style="padding:4px 10px;font-size:.78rem;min-height:30px" onclick="removeBlock(${i})">Remove</button></td>
+      <td><button class="btn btn-danger" style="padding:4px 10px;font-size:.78rem;min-height:30px" onclick="removeBlock('${bl.id}')">Remove</button></td>
     </tr>`;
   }).join(''):'<tr><td colspan="4" style="color:var(--text-dim);text-align:center;padding:16px">No blocks set.</td></tr>';
 }
 
-function removeBlock(index){
-  const blocks=getBlocks();
-  if(!confirm(`Remove block: ${blocks[index].date} ${blocks[index].start}–${blocks[index].end}?`))return;
-  blocks.splice(index,1);
-  saveBlocks(blocks);
-  renderBlocksTable();
-  renderCalendar();
+async function removeBlock(id){
+  const bl=blocksList.find(b=>b.id===id); if(!bl) return;
+  if(!confirm(`Remove block: ${bl.date_str} ${bl.start_time}–${bl.end_time}?`)) return;
+  const{error}=await db.from('blocks').delete().eq('id',id);
+  if(error){showToast('Failed to remove block.',true);return;}
   showToast('Block removed.');
+  // Realtime handles local state
 }
 
 // Multi-date block adding
+let blockPendingDates=[];
 function openDatePickerModal(){
   document.getElementById('datePickerInput').value='';
   openModal('datePickerModal');
@@ -1125,19 +865,14 @@ function addBlockDateFromModal(){
   blockPendingDates.push(d);
   renderBlockDatesDisplay();
   document.getElementById('datePickerInput').value='';
-  // Keep modal open for adding more dates
 }
-function removeBlockDate(d){
-  blockPendingDates=blockPendingDates.filter(x=>x!==d);
-  renderBlockDatesDisplay();
-}
+function removeBlockDate(d){blockPendingDates=blockPendingDates.filter(x=>x!==d);renderBlockDatesDisplay();}
 function renderBlockDatesDisplay(){
   const el=document.getElementById('blockDatesDisplay');
   const countEl=document.getElementById('blockDateCount');
   if(countEl) countEl.textContent=blockPendingDates.length===0?'(none added)':`(${blockPendingDates.length} date${blockPendingDates.length===1?'':'s'})`;
   if(!blockPendingDates.length){
-    el.innerHTML='<div class="date-grid-empty">No dates added yet. Click "Add Date" to begin.</div>';
-    return;
+    el.innerHTML='<div class="date-grid-empty">No dates added yet. Click "Add Date" to begin.</div>'; return;
   }
   el.innerHTML=blockPendingDates.map(d=>{
     const[y,m,dd]=d.split('-');
@@ -1147,46 +882,43 @@ function renderBlockDatesDisplay(){
     </div>`;
   }).join('');
 }
-function addBlock(){
-  const start=document.getElementById('blockStart').value;
-  const end=document.getElementById('blockEnd').value;
+
+async function addBlock(){
+  const start =document.getElementById('blockStart').value;
+  const end   =document.getElementById('blockEnd').value;
   const reason=document.getElementById('blockReason').value.trim()||'Blocked';
   if(blockPendingDates.length===0){showToast('Add at least one date.',true);return;}
   if(!start||!end){showToast('Set start and end times.',true);return;}
   if(start>=end){showToast('End must be after start.',true);return;}
-  const count=blockPendingDates.length;
-  const blocks=getBlocks();
-  blockPendingDates.forEach(date=>blocks.push({date,start,end,reason}));
-  saveBlocks(blocks);
+  const rows=blockPendingDates.map(date=>({date_str:date, start_time:start, end_time:end, reason}));
+  const{error}=await db.from('blocks').insert(rows);
+  if(error){showToast('Failed to save blocks: '+error.message,true);return;}
   blockPendingDates=[];
   renderBlockDatesDisplay();
-  renderBlocksTable();
-  renderCalendar();
   closeModal('datePickerModal');
-  showToast(`Blocked ${start}–${end} on ${count} date${count===1?'':'s'}.`);
   document.getElementById('blockReason').value='';
+  showToast(`Blocked ${start}–${end} on ${rows.length} date${rows.length===1?'':'s'}.`);
+  // Realtime handles table/calendar update
 }
 
-function adminCancel(key){
-  const bk=getBookings();const keys=getClusterKeys(bk,key);
-  if(!confirm(`Cancel this booking${keys.length>1?` (${keys.length} slots)`:''}`+'?'))return;
-  // GCal delete
-  const b=bk[key];const cfg=getGCalConfig();
-  if(b&&b.gcalEventId&&cfg.apiKey&&cfg.calendarId)gcalDeleteEvent(b.gcalEventId);
-  keys.forEach(k=>delete bk[k]);saveBookings(bk);
-  renderAdminPanel();renderCalendar();showToast('Booking cancelled.');
+async function adminCancel(key){
+  const b=bookingsMap[key]; if(!b) return;
+  const clusterSlots=b.cluster_key
+    ? Object.values(bookingsMap).filter(r=>r.cluster_key===b.cluster_key)
+    : [b];
+  if(!confirm(`Cancel this booking${clusterSlots.length>1?` (${clusterSlots.length} slots)`:''}`+'?')) return;
+  const{error}=b.cluster_key
+    ? await db.from('bookings').delete().eq('cluster_key',b.cluster_key)
+    : await db.from('bookings').delete().eq('id',b.id);
+  if(error){showToast('Failed to cancel.',true);return;}
+  showToast('Booking cancelled.');
 }
-function saveGCalConfig(){
-  localStorage.setItem('fc_gcal',JSON.stringify({
-    calendarId:document.getElementById('calendarId').value.trim(),
-    apiKey:document.getElementById('apiKey').value.trim()
-  }));
-  updateGCalIndicator();
-  showToast('Google Calendar config saved. Click "Test Connection" to verify.');
-}
-function clearAllBookings(){
-  if(!confirm('Delete ALL bookings? This cannot be undone.'))return;
-  localStorage.removeItem('fc_bookings');renderCalendar();renderAdminPanel();showToast('All bookings cleared.');
+
+async function clearAllBookings(){
+  if(!confirm('Delete ALL bookings? This cannot be undone.')) return;
+  const{error}=await db.from('bookings').delete().neq('id','00000000-0000-0000-0000-000000000000');
+  if(error){showToast('Failed to clear bookings.',true);return;}
+  showToast('All bookings cleared.');
 }
 
 // ══════════════════════════════════════════
@@ -1194,7 +926,7 @@ function clearAllBookings(){
 // ══════════════════════════════════════════
 function openExportModal(){
   const wd=getWeekStart(currentWeekOffset);
-  const we2=new Date(wd);we2.setDate(we2.getDate()+6);
+  const we2=new Date(wd); we2.setDate(we2.getDate()+6);
   document.getElementById('exportFromModal').value=dateKey(wd);
   document.getElementById('exportToModal').value=dateKey(we2);
   openModal('exportModal');
@@ -1204,8 +936,7 @@ function exportFromModal(fmt){
   const to  =document.getElementById('exportToModal').value;
   if(!from||!to){showToast('Set both dates.',true);return;}
   closeModal('exportModal');
-  if(fmt==='csv')exportReportCSV(from,to);
-  else exportReportHTMLFn(from,to);
+  if(fmt==='csv') exportReportCSV(from,to); else exportReportHTMLFn(from,to);
 }
 function exportReport(){
   const from=document.getElementById('exportFrom').value;
@@ -1221,123 +952,73 @@ function exportReportHTML(){
 }
 
 function buildReportData(from,to){
-  const bk=getBookings();const blocks=getBlocks();
   const fromD=new Date(from+'T00:00:00');
   const toD  =new Date(to  +'T23:59:59');
-
-  // Collect all dates in range
   const dates=[];
-  for(let d=new Date(fromD);d<=toD;d.setDate(d.getDate()+1))dates.push(dateKey(new Date(d)));
-
-  // Per-week buckets
+  for(let d=new Date(fromD);d<=toD;d.setDate(d.getDate()+1)) dates.push(dateKey(new Date(d)));
   const weeks={};
-  const getWeekKey=dateStr=>{
-    const d=new Date(dateStr+'T12:00:00');
-    const sun=new Date(d);sun.setDate(d.getDate()-d.getDay());
-    return dateKey(sun);
-  };
-
+  const getWeekKey=dateStr=>{const d=new Date(dateStr+'T12:00:00');const sun=new Date(d);sun.setDate(d.getDate()-d.getDay());return dateKey(sun);};
   let totalBookingMin=0,totalBlockMin=0;
-  const bookingSummary=[]; // {date, name, pi, start, end, minutes}
-  const blockSummary=[];
-
+  const bookingSummary=[],blockSummary=[];
   const seenCk=new Set();
   for(const dateStr of dates){
     const wk=getWeekKey(dateStr);
-    if(!weeks[wk])weeks[wk]={bookingMin:0,blockMin:0,start:dateStr,end:dateStr};
-    weeks[wk].end=dateStr;
-
-    // Bookings
+    if(!weeks[wk]) weeks[wk]={bookingMin:0,blockMin:0};
     for(let s=0;s<48;s++){
-      const bKey=bookingKey(dateStr,s);
-      const b=bk[bKey];
-      if(!b)continue;
-      const cid=b.clusterKey||bKey;
-      if(seenCk.has(cid))continue;
-      seenCk.add(cid);
-      const st=b.clusterStart!==undefined?b.clusterStart:s;
-      const en=b.clusterEnd  !==undefined?b.clusterEnd  :s;
+      const b=bookingsMap[bookingKey(dateStr,s)]; if(!b) continue;
+      const cid=b.cluster_key||bookingKey(dateStr,s);
+      if(seenCk.has(cid)) continue; seenCk.add(cid);
+      const st=b.cluster_start!==null&&b.cluster_start!==undefined?b.cluster_start:s;
+      const en=b.cluster_end  !==null&&b.cluster_end  !==undefined?b.cluster_end  :s;
       const mins=(en-st+1)*30;
       bookingSummary.push({date:dateStr,name:b.name,pi:b.pi,start:slotToLabel(st),end:slotToLabel(en+1),minutes:mins});
-      weeks[wk].bookingMin+=mins;
-      totalBookingMin+=mins;
+      weeks[wk].bookingMin+=mins; totalBookingMin+=mins;
     }
-
-    // Blocks
-    const dayBlocks=blocks.filter(bl=>bl.date===dateStr);
+    const dayBlocks=blocksList.filter(bl=>bl.date_str===dateStr);
     for(const bl of dayBlocks){
-      const[sh,sm]=bl.start.split(':').map(Number);
-      const[eh,em]=bl.end.split(':').map(Number);
+      const[sh,sm]=bl.start_time.split(':').map(Number);
+      const[eh,em]=bl.end_time.split(':').map(Number);
       const mins=(eh*60+em)-(sh*60+sm);
-      blockSummary.push({date:dateStr,start:bl.start,end:bl.end,reason:bl.reason||'Blocked',minutes:mins});
-      weeks[wk].blockMin+=mins;
-      totalBlockMin+=mins;
+      blockSummary.push({date:dateStr,start:bl.start_time,end:bl.end_time,reason:bl.reason||'Blocked',minutes:mins});
+      weeks[wk].blockMin+=mins; totalBlockMin+=mins;
     }
   }
   return{weeks,bookingSummary,blockSummary,totalBookingMin,totalBlockMin,from,to};
 }
 
-function fmtMin(m){
-  const h=Math.floor(m/60),mn=m%60;
-  return h>0?(mn>0?`${h}h ${mn}m`:`${h}h`):`${mn}m`;
-}
+function fmtMin(m){const h=Math.floor(m/60),mn=m%60;return h>0?(mn>0?`${h}h ${mn}m`:`${h}h`):`${mn}m`;}
 
 function exportReportCSV(from,to){
   const{weeks,bookingSummary,blockSummary,totalBookingMin,totalBlockMin}=buildReportData(from,to);
   let csv='FLOW CYTOMETER USAGE REPORT — HANS 305\n';
   csv+=`Report period: ${from} to ${to}\n\n`;
-
   csv+='=== BOOKINGS ===\nDate,Name,PI/Lab,Start,End,Duration (min)\n';
   bookingSummary.forEach(b=>csv+=`${b.date},"${b.name}","${b.pi}",${b.start},${b.end},${b.minutes}\n`);
-
   csv+='\n=== MAINTENANCE BLOCKS ===\nDate,Start,End,Reason,Duration (min)\n';
   blockSummary.forEach(b=>csv+=`${b.date},${b.start},${b.end},"${b.reason}",${b.minutes}\n`);
-
   csv+='\n=== WEEKLY SUMMARY ===\nWeek of,Booking Time,Block Time\n';
-  Object.entries(weeks).sort((a,b)=>a[0].localeCompare(b[0])).forEach(([wk,w])=>{
-    csv+=`${wk},${fmtMin(w.bookingMin)},${fmtMin(w.blockMin)}\n`;
-  });
-
+  Object.entries(weeks).sort((a,b)=>a[0].localeCompare(b[0])).forEach(([wk,w])=>{csv+=`${wk},${fmtMin(w.bookingMin)},${fmtMin(w.blockMin)}\n`;});
   csv+=`\n=== TOTALS ===\nTotal Booking Time,${fmtMin(totalBookingMin)}\nTotal Block Time,${fmtMin(totalBlockMin)}\n`;
-
   const blob=new Blob([csv],{type:'text/csv'});
   const url=URL.createObjectURL(blob);
-  const a=document.createElement('a');
-  a.href=url;a.download=`flow-cytometer-report-${from}-${to}.csv`;
-  document.body.appendChild(a);a.click();document.body.removeChild(a);
-  URL.revokeObjectURL(url);
+  const a=document.createElement('a'); a.href=url; a.download=`flow-cytometer-report-${from}-${to}.csv`;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
   showToast('CSV exported.');
 }
 
 function exportReportHTMLFn(from,to){
   const{weeks,bookingSummary,blockSummary,totalBookingMin,totalBlockMin}=buildReportData(from,to);
-  const wkRows=Object.entries(weeks).sort((a,b)=>a[0].localeCompare(b[0])).map(([wk,w])=>`
-    <tr><td>Week of ${wk}</td><td>${fmtMin(w.bookingMin)}</td><td>${fmtMin(w.blockMin)}</td></tr>`).join('');
-
-  const bkRows=bookingSummary.map(b=>`
-    <tr><td>${b.date}</td><td>${b.name}</td><td>${b.pi}</td><td>${b.start} – ${b.end}</td><td>${b.minutes} min</td></tr>`).join('');
-
-  const blRows=blockSummary.map(b=>`
-    <tr><td>${b.date}</td><td>${b.start} – ${b.end}</td><td>${b.reason}</td><td>${b.minutes} min</td></tr>`).join('');
-
-  const html=`<!DOCTYPE html><html><head><meta charset="UTF-8">
-  <title>Flow Cytometer Report ${from} – ${to}</title>
-  <style>
-    body{font-family:'Segoe UI',Arial,sans-serif;background:#f5f0eb;color:#2b2318;padding:40px;max-width:900px;margin:auto;}
-    h1{color:#3E4C54;font-size:1.8rem;margin-bottom:4px;}
-    h2{color:#BC6C54;font-size:1.1rem;margin:28px 0 10px;}
-    .period{color:#6a7a84;font-size:.9rem;margin-bottom:24px;}
-    table{width:100%;border-collapse:collapse;margin-bottom:20px;font-size:.9rem;}
-    th{background:#3E4C54;color:#E9D9C8;padding:10px 14px;text-align:left;}
-    td{padding:9px 14px;border-bottom:1px solid #d8cfc4;}
-    tr:hover td{background:#ede8e2;}
-    .totals{background:#3E4C54;color:#E9D9C8;padding:20px 24px;border-radius:10px;display:flex;gap:40px;flex-wrap:wrap;}
-    .total-item{text-align:center;}
-    .total-item .val{font-size:1.8rem;font-weight:700;color:#E4A489;}
-    .total-item .lbl{font-size:.8rem;opacity:.8;}
-    @media print{body{padding:20px;background:white;}}
-  </style>
-  </head><body>
+  const wkRows=Object.entries(weeks).sort((a,b)=>a[0].localeCompare(b[0])).map(([wk,w])=>`<tr><td>Week of ${wk}</td><td>${fmtMin(w.bookingMin)}</td><td>${fmtMin(w.blockMin)}</td></tr>`).join('');
+  const bkRows=bookingSummary.map(b=>`<tr><td>${b.date}</td><td>${b.name}</td><td>${b.pi}</td><td>${b.start} – ${b.end}</td><td>${b.minutes} min</td></tr>`).join('');
+  const blRows=blockSummary.map(b=>`<tr><td>${b.date}</td><td>${b.start} – ${b.end}</td><td>${b.reason}</td><td>${b.minutes} min</td></tr>`).join('');
+  const html=`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Flow Cytometer Report ${from} – ${to}</title>
+  <style>body{font-family:'Segoe UI',Arial,sans-serif;background:#f5f0eb;color:#2b2318;padding:40px;max-width:900px;margin:auto;}
+  h1{color:#3E4C54;font-size:1.8rem;margin-bottom:4px;}h2{color:#BC6C54;font-size:1.1rem;margin:28px 0 10px;}
+  .period{color:#6a7a84;font-size:.9rem;margin-bottom:24px;}table{width:100%;border-collapse:collapse;margin-bottom:20px;font-size:.9rem;}
+  th{background:#3E4C54;color:#E9D9C8;padding:10px 14px;text-align:left;}td{padding:9px 14px;border-bottom:1px solid #d8cfc4;}
+  tr:hover td{background:#ede8e2;}.totals{background:#3E4C54;color:#E9D9C8;padding:20px 24px;border-radius:10px;display:flex;gap:40px;flex-wrap:wrap;}
+  .total-item{text-align:center;}.total-item .val{font-size:1.8rem;font-weight:700;color:#E4A489;}.total-item .lbl{font-size:.8rem;opacity:.8;}
+  @media print{body{padding:20px;background:white;}}</style></head><body>
   <h1>Flow Cytometer Usage Report</h1>
   <div class="period">HANS 305 &nbsp;·&nbsp; ${from} to ${to} &nbsp;·&nbsp; Generated ${new Date().toLocaleString()}</div>
   <div class="totals">
@@ -1345,30 +1026,21 @@ function exportReportHTMLFn(from,to){
     <div class="total-item"><div class="val">${fmtMin(totalBlockMin)}</div><div class="lbl">Total Block/Maintenance Time</div></div>
     <div class="total-item"><div class="val">${bookingSummary.length}</div><div class="lbl">Total Bookings</div></div>
   </div>
-  <h2>Weekly Summary</h2>
-  <table><thead><tr><th>Week</th><th>Booking Time</th><th>Block/Maintenance Time</th></tr></thead>
-  <tbody>${wkRows}</tbody></table>
-  <h2>All Bookings</h2>
-  <table><thead><tr><th>Date</th><th>Name</th><th>PI / Lab</th><th>Time</th><th>Duration</th></tr></thead>
-  <tbody>${bkRows||'<tr><td colspan="5" style="color:#999">No bookings in this period.</td></tr>'}</tbody></table>
-  <h2>Maintenance / Blocked Periods</h2>
-  <table><thead><tr><th>Date</th><th>Time</th><th>Reason</th><th>Duration</th></tr></thead>
-  <tbody>${blRows||'<tr><td colspan="4" style="color:#999">No blocks in this period.</td></tr>'}</tbody></table>
+  <h2>Weekly Summary</h2><table><thead><tr><th>Week</th><th>Booking Time</th><th>Block/Maintenance Time</th></tr></thead><tbody>${wkRows}</tbody></table>
+  <h2>All Bookings</h2><table><thead><tr><th>Date</th><th>Name</th><th>PI / Lab</th><th>Time</th><th>Duration</th></tr></thead><tbody>${bkRows||'<tr><td colspan="5" style="color:#999">No bookings in this period.</td></tr>'}</tbody></table>
+  <h2>Maintenance / Blocked Periods</h2><table><thead><tr><th>Date</th><th>Time</th><th>Reason</th><th>Duration</th></tr></thead><tbody>${blRows||'<tr><td colspan="4" style="color:#999">No blocks in this period.</td></tr>'}</tbody></table>
   </body></html>`;
-
   const blob=new Blob([html],{type:'text/html'});
   const url=URL.createObjectURL(blob);
-  const a=document.createElement('a');
-  a.href=url;a.download=`flow-cytometer-report-${from}-${to}.html`;
-  document.body.appendChild(a);a.click();document.body.removeChild(a);
-  URL.revokeObjectURL(url);
+  const a=document.createElement('a'); a.href=url; a.download=`flow-cytometer-report-${from}-${to}.html`;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
   showToast('HTML report exported.');
 }
 
 // ══════════════════════════════════════════
 // MODAL HELPERS
 // ══════════════════════════════════════════
-function openModal(id) {document.getElementById(id).classList.add('open');}
+function openModal(id){document.getElementById(id).classList.add('open');}
 function closeModal(id){document.getElementById(id).classList.remove('open');}
 document.querySelectorAll('.modal-overlay').forEach(el=>
   el.addEventListener('click',e=>{if(e.target===el)el.classList.remove('open');})
@@ -1379,15 +1051,31 @@ document.querySelectorAll('.modal-overlay').forEach(el=>
 // ══════════════════════════════════════════
 let toastTimer;
 function showToast(msg,isError=false){
-  const t=document.getElementById('toast');t.textContent=msg;
+  const t=document.getElementById('toast'); t.textContent=msg;
   t.className='toast show'+(isError?' error':'');
-  clearTimeout(toastTimer);toastTimer=setTimeout(()=>t.classList.remove('show'),3400);
+  clearTimeout(toastTimer); toastTimer=setTimeout(()=>t.classList.remove('show'),3400);
+}
+
+// ══════════════════════════════════════════
+// TIME SELECT POPULATION
+// ══════════════════════════════════════════
+function populateTimeSelects(){
+  const times=[];
+  for(let s=0;s<48;s++) times.push(slotToLabel(s));
+  ['bookStartTime','bookEndTime','blockStart','blockEnd'].forEach(id=>{
+    const sel=document.getElementById(id);
+    if(!sel) return;
+    sel.innerHTML=times.map(t=>`<option value="${t}">${t}</option>`).join('');
+  });
+  // Defaults for block end
+  document.getElementById('blockEnd').value='09:00';
 }
 
 // ══════════════════════════════════════════
 // INIT
 // ══════════════════════════════════════════
-renderCalendar();
+populateTimeSelects();
+loadAllData().then(()=>subscribeRealtime());
 </script>
 </body>
 </html>
