@@ -248,8 +248,8 @@
           <div class="form-group" style="margin:0"><label style="font-size:.78rem;color:#a88830;">End Time</label><select id="adminBookEnd" style="width:140px;background:#1e1808;border:2px solid rgba(200,168,74,.4);border-radius:8px;padding:8px 10px;font-family:'Google Sans',sans-serif;font-size:.9rem;color:var(--text);outline:none;"></select></div>
         </div>
         <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:10px;">
-          <div class="form-group" style="margin:0;flex:1;min-width:160px;"><label style="font-size:.78rem;color:#a88830;">Name *</label><input type="text" id="adminBookName" placeholder="e.g. Liam" style="width:100%;background:#1e1808;border:2px solid rgba(200,168,74,.4);border-radius:8px;padding:8px 12px;font-family:'Google Sans',sans-serif;font-size:.95rem;color:var(--text);outline:none;min-height:44px;"></div>
-          <div class="form-group" style="margin:0;flex:1;min-width:160px;"><label style="font-size:.78rem;color:#a88830;">PI / Lab *</label><input type="text" id="adminBookPI" placeholder="e.g. Olson" style="width:100%;background:#1e1808;border:2px solid rgba(200,168,74,.4);border-radius:8px;padding:8px 12px;font-family:'Google Sans',sans-serif;font-size:.95rem;color:var(--text);outline:none;min-height:44px;"></div>
+          <div class="form-group" style="margin:0;flex:1;min-width:160px;"><label style="font-size:.78rem;color:#a88830;">Name *</label><input type="text" id="adminBookName" placeholder="First Last" style="width:100%;background:#1e1808;border:2px solid rgba(200,168,74,.4);border-radius:8px;padding:8px 12px;font-family:'Google Sans',sans-serif;font-size:.95rem;color:var(--text);outline:none;min-height:44px;"></div>
+          <div class="form-group" style="margin:0;flex:1;min-width:160px;"><label style="font-size:.78rem;color:#a88830;">PI / Lab *</label><input type="text" id="adminBookPI" placeholder="Dr. Smith Lab" style="width:100%;background:#1e1808;border:2px solid rgba(200,168,74,.4);border-radius:8px;padding:8px 12px;font-family:'Google Sans',sans-serif;font-size:.95rem;color:var(--text);outline:none;min-height:44px;"></div>
         </div>
         <div class="form-group" style="margin-bottom:10px;"><label style="font-size:.78rem;color:#a88830;">Notes (optional)</label><textarea id="adminBookNotes" placeholder="Sample type, experiment, etc." style="width:100%;min-height:60px;resize:vertical;background:#1e1808;border:2px solid rgba(200,168,74,.4);border-radius:8px;padding:8px 10px;font-family:'Google Sans',sans-serif;font-size:.9rem;color:var(--text);outline:none;"></textarea></div>
         <div style="margin-bottom:10px;">
@@ -337,8 +337,8 @@
       </div>
     </div>
     <div id="bookConflictMsg" style="display:none;color:#e07070;font-size:.85rem;margin-bottom:12px;padding:8px 12px;background:rgba(90,32,32,.35);border-radius:6px;border:1px solid #7a3030;"></div>
-    <div class="form-group"><label>Your Name *</label><input type="text" id="bookName" placeholder="e.g. Liam"/></div>
-    <div class="form-group"><label>PI / Lab Name *</label><input type="text" id="bookPI" placeholder="e.g. Olson"/></div>
+    <div class="form-group"><label>Your Name *</label><input type="text" id="bookName" placeholder="First Last"/></div>
+    <div class="form-group"><label>PI / Lab Name *</label><input type="text" id="bookPI" placeholder="Dr. Smith Lab"/></div>
     <div class="form-group"><label>Notes (optional)</label><textarea id="bookNotes" placeholder="Sample type, experiment, etc."></textarea></div>
     <div class="modal-actions">
       <button class="btn" onclick="closeModal('bookModal')">Cancel</button>
@@ -408,7 +408,7 @@
 // ══════════════════════════════════════════
 const SUPABASE_URL      = 'https://zouicalllbffeynwldxq.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpvdWljYWxsbGJmZmV5bndsZHhxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAwNjM3MjMsImV4cCI6MjA5NTYzOTcyM30.UrTjcPxLb0egor5W8qcFaO_J8B-4gJH2VWjw_6eE5mU';
-const ADMIN_PASSWORD    = 'olsonflow@purdueHANS305';
+const ADMIN_PASSWORD_HASH = '39d15e1d7e45337d6b89d317ed61e6875ac30cf3057a53e6d6b7d9a2d26728d8';
 
 // ── Slot / time constants ─────────────────
 const SLOT_H               = 68;
@@ -807,8 +807,14 @@ function showAdmin(){
   else{openModal('adminLoginModal');setTimeout(()=>document.getElementById('adminPassword').focus(),100);}
 }
 function hideAdmin(){document.getElementById('adminPanel').classList.remove('open');document.getElementById('bookingPage').classList.remove('hidden');}
-function checkAdminPw(){
-  if(document.getElementById('adminPassword').value===ADMIN_PASSWORD){
+async function checkAdminPw(){
+  const pw = document.getElementById('adminPassword').value;
+  const encoder = new TextEncoder();
+  const data = encoder.encode(pw);
+  const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  const hashHex = hashArray.map(b => b.toString(16).padStart(2,'0')).join('');
+  if(hashHex === ADMIN_PASSWORD_HASH){
     isAdminAuthed=true;closeModal('adminLoginModal');document.getElementById('adminPassword').value='';
     renderAdminPanel();document.getElementById('bookingPage').classList.add('hidden');document.getElementById('adminPanel').classList.add('open');
   }else{showToast('Incorrect password.',true);document.getElementById('adminPassword').value='';document.getElementById('adminPassword').focus();}
