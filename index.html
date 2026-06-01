@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
-  <title>Flow Cytometer Booking | HANS 305</title>
+  <title>Flow Cytometer Booking | HANS 301</title>
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📅</text></svg>">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;700&display=swap" rel="stylesheet">
@@ -193,7 +193,7 @@
 
 <header>
   <div class="header-left">
-    <h1>Flow Cytometer <span>HANS 305</span></h1>
+    <h1>Flow Cytometer <span>HANS 301</span></h1>
     <p>Booking System · 30-min slots · Book up to 1 month ahead</p>
   </div>
   <div class="header-right">
@@ -1043,7 +1043,7 @@ function fmtMin(m){const h=Math.floor(m/60),mn=m%60;return h>0?(mn>0?`${h}h ${mn
 
 function exportReportCSV(from,to){
   const{weeks,bookingSummary,blockSummary,totalBookingMin,totalBlockMin}=buildReportData(from,to);
-  let csv='FLOW CYTOMETER USAGE REPORT — HANS 305\n';
+  let csv='FLOW CYTOMETER USAGE REPORT — HANS 301\n';
   csv+=`Report period: ${from} to ${to}\n\n`;
   csv+='=== BOOKINGS ===\nDate,Name,PI/Lab,Start,End,Duration (min)\n';
   bookingSummary.forEach(b=>csv+=`${b.date},"${b.name}","${b.pi}",${b.start},${b.end},${b.minutes}\n`);
@@ -1074,7 +1074,7 @@ function exportReportHTMLFn(from,to){
   .total-item{text-align:center;}.total-item .val{font-size:1.8rem;font-weight:700;color:#E4A489;}.total-item .lbl{font-size:.8rem;opacity:.8;}
   @media print{body{padding:20px;background:white;}}</style></head><body>
   <h1>Flow Cytometer Usage Report</h1>
-  <div class="period">HANS 305 &nbsp;·&nbsp; ${from} to ${to} &nbsp;·&nbsp; Generated ${new Date().toLocaleString()}</div>
+  <div class="period">HANS 301 &nbsp;·&nbsp; ${from} to ${to} &nbsp;·&nbsp; Generated ${new Date().toLocaleString()}</div>
   <div class="totals">
     <div class="total-item"><div class="val">${fmtMin(totalBookingMin)}</div><div class="lbl">Total Booking Time</div></div>
     <div class="total-item"><div class="val">${fmtMin(totalBlockMin)}</div><div class="lbl">Total Block/Maintenance Time</div></div>
