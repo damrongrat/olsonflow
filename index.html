@@ -359,7 +359,7 @@
     <div class="modal-actions">
       <button class="btn" onclick="closeModal('viewModal')">Close</button>
       <button class="btn btn-note" onclick="saveNotes()">Save Notes</button>
-      <button class="btn btn-danger" id="cancelBookingBtn" onclick="cancelCurrentBooking()">Cancel Booking</button>
+      <button class="btn btn-danger" id="cancelBookingBtn" onclick="cancelCurrentBooking()">Remove Booking</button>
     </div>
   </div>
 </div>
@@ -793,10 +793,16 @@ async function cancelCurrentBooking(){
   const{error}=b.cluster_key
     ? await db.from('bookings').delete().eq('cluster_key',b.cluster_key)
     : await db.from('bookings').delete().eq('id',b.id);
-  if(error){showToast('Failed to cancel booking.',true);return;}
+  if(error){showToast('Failed to remove booking.',true);return;}
+  // Update local state immediately — don't wait for realtime
+  for(const k of Object.keys(bookingsMap)){
+    const r=bookingsMap[k];
+    if(b.cluster_key ? r.cluster_key===b.cluster_key : r.id===b.id) delete bookingsMap[k];
+  }
   closeModal('viewModal');
-  showToast('Booking cancelled.');
-  // Realtime handles UI update
+  showToast('Booking removed.');
+  renderCalendar();
+  if(isAdminAuthed) renderAdminPanel();
 }
 
 // ══════════════════════════════════════════
@@ -837,7 +843,7 @@ function renderAdminPanel(){
     return `<tr><td>${dl}</td><td>${slotToLabel(st)} – ${slotToLabel(en)}</td><td>${(en-st)*30}m</td>
       <td style="color:var(--linen);font-weight:600">${escHtml(b.name)}</td>
       <td>${escHtml(b.pi)}</td><td>${escHtml(b.notes||'—')}</td>
-      <td><button class="btn btn-danger" style="padding:5px 12px;font-size:.82rem;min-height:34px" onclick="adminCancel('${key}')">Cancel</button></td></tr>`;
+      <td><button class="btn btn-danger" style="padding:5px 12px;font-size:.82rem;min-height:34px" onclick="adminCancel('${key}')">Remove</button></td></tr>`;
   }).join(''):'<tr><td colspan="7" style="color:var(--text-dim);text-align:center;padding:20px">No bookings yet.</td></tr>';
 
   renderBlocksTable();
@@ -943,19 +949,29 @@ async function adminCancel(key){
   const clusterSlots=b.cluster_key
     ? Object.values(bookingsMap).filter(r=>r.cluster_key===b.cluster_key)
     : [b];
-  if(!confirm(`Cancel this booking${clusterSlots.length>1?` (${clusterSlots.length} slots)`:''}`+'?')) return;
+  if(!confirm(`Remove this booking${clusterSlots.length>1?` (${clusterSlots.length} slots)`:''}`+'?')) return;
   const{error}=b.cluster_key
     ? await db.from('bookings').delete().eq('cluster_key',b.cluster_key)
     : await db.from('bookings').delete().eq('id',b.id);
-  if(error){showToast('Failed to cancel.',true);return;}
-  showToast('Booking cancelled.');
+  if(error){showToast('Failed to remove.',true);return;}
+  // Update local state immediately
+  for(const k of Object.keys(bookingsMap)){
+    const r=bookingsMap[k];
+    if(b.cluster_key ? r.cluster_key===b.cluster_key : r.id===b.id) delete bookingsMap[k];
+  }
+  showToast('Booking removed.');
+  renderCalendar();
+  renderAdminPanel();
 }
 
 async function clearAllBookings(){
   if(!confirm('Delete ALL bookings? This cannot be undone.')) return;
   const{error}=await db.from('bookings').delete().neq('id','00000000-0000-0000-0000-000000000000');
   if(error){showToast('Failed to clear bookings.',true);return;}
+  bookingsMap={};
   showToast('All bookings cleared.');
+  renderCalendar();
+  renderAdminPanel();
 }
 
 // ══════════════════════════════════════════
