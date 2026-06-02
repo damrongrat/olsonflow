@@ -18,6 +18,7 @@
       --work-bg:#3d4d42; --work-border:#4e6254; --offhour-bg:#272e33; --normal-bg:#343d44;
       --booked-bg:#5a4510; --booked-bg-past:#1e1804; --booked-border:#c8a84a;
       --booked-text:#f0d890; --booked-pi:#c8a840;
+      --today-col-tint:rgba(228,164,137,.07);
       --slot-h:68px;
     }
     *{box-sizing:border-box;margin:0;padding:0;}
@@ -62,6 +63,10 @@
     .cal-header-cell.today.weekend .day-num{color:var(--peach);}
     .time-slot.weekend{background:#2e3538;}
     .time-slot.weekend:not(.booked-cell):not(.past):not(.blocked-cell):hover{background:#363f45;box-shadow:inset 0 0 0 2px #4a5660;}
+    /* Today column highlight */
+    .time-slot.today-col:not(.booked-cell):not(.blocked-cell):not(.past){filter:brightness(1.22);}
+    .time-slot.today-col.booked-cell{filter:none;}
+    .time-slot.today-col.blocked-cell{filter:none;}
 
     .cal-rows-wrapper{width:100%;overflow:visible;}
     .cal-row{display:grid;grid-template-columns:90px repeat(7,1fr);border-bottom:1px solid var(--border);height:var(--slot-h);}
@@ -201,7 +206,7 @@
 <header>
   <div class="header-left">
     <h1>Flow Cytometer <span>HANS 301</span></h1>
-    <p>Booking System · 30-min slots · Book up to 1 month ahead</p>
+    <p>Book up to 1 month ahead | Do not remove other people's bookings without permission</p>
   </div>
   <div class="header-right">
     <div class="db-status">
@@ -277,11 +282,12 @@
       </div>
 
       <!-- All Bookings table -->
-      <div style="font-size:.85rem;font-weight:700;color:#c8a840;margin-bottom:10px;">All Bookings</div>
-      <table class="admin-table">
-        <thead><tr><th style="color:#c8a840;">Date</th><th style="color:#c8a840;">Time</th><th style="color:#c8a840;">Dur.</th><th style="color:#c8a840;">Name</th><th style="color:#c8a840;">PI</th><th style="color:#c8a840;">Notes</th><th style="color:#c8a840;">Action</th></tr></thead>
+      <div id="adminTableWrapper" style="max-height:420px;overflow-y:auto;border:1px solid rgba(200,168,74,.2);border-radius:8px;">
+      <table class="admin-table" style="margin:0;">
+        <thead><tr><th style="color:#c8a840;position:sticky;top:0;background:#2a2010;z-index:1;">Date</th><th style="color:#c8a840;position:sticky;top:0;background:#2a2010;z-index:1;">Time</th><th style="color:#c8a840;position:sticky;top:0;background:#2a2010;z-index:1;">Dur.</th><th style="color:#c8a840;position:sticky;top:0;background:#2a2010;z-index:1;">Name</th><th style="color:#c8a840;position:sticky;top:0;background:#2a2010;z-index:1;">PI</th><th style="color:#c8a840;position:sticky;top:0;background:#2a2010;z-index:1;">Notes</th><th style="color:#c8a840;position:sticky;top:0;background:#2a2010;z-index:1;">Action</th></tr></thead>
         <tbody id="adminTableBody"></tbody>
       </table>
+      </div>
     </div>
 
     <!-- Block management — dark red theme -->
@@ -308,10 +314,12 @@
         </div>
         <button class="btn" style="background:#7a2020;border-color:#a03030;color:#f0c0c0;font-weight:700;padding:10px 20px;" onclick="addBlock()">Save Block(s)</button>
       </div>
-      <table class="admin-table">
-        <thead><tr><th style="color:#c07070;">Date</th><th style="color:#c07070;">Time</th><th style="color:#c07070;">Reason</th><th style="color:#c07070;">Action</th></tr></thead>
+      <div id="blocksTableWrapper" style="max-height:320px;overflow-y:auto;border:1px solid rgba(160,40,40,.3);border-radius:8px;">
+      <table class="admin-table" style="margin:0;">
+        <thead><tr><th style="color:#c07070;position:sticky;top:0;background:#2a1a1a;z-index:1;">Date</th><th style="color:#c07070;position:sticky;top:0;background:#2a1a1a;z-index:1;">Time</th><th style="color:#c07070;position:sticky;top:0;background:#2a1a1a;z-index:1;">Reason</th><th style="color:#c07070;position:sticky;top:0;background:#2a1a1a;z-index:1;">Action</th></tr></thead>
         <tbody id="blocksTableBody"></tbody>
       </table>
+      </div>
     </div>
 
     <!-- Export -->
@@ -570,7 +578,8 @@ function handleBlockChange(payload){
   if(suppressBlockRealtime) return; // ignore realtime during bulk ops
   const { eventType, new: newRow, old: oldRow } = payload;
   if(eventType === 'INSERT'){
-    blocksList.push(newRow);
+    // Deduplicate — realtime can fire after a manual reload already added the row
+    if(!blocksList.some(b=>b.id===newRow.id)) blocksList.push(newRow);
   } else if(eventType === 'DELETE'){
     blocksList = blocksList.filter(b => b.id !== oldRow.id);
   }
@@ -649,9 +658,11 @@ function renderCalendar(){
       const inWin=isWithinBookingWindow(d);
 
       const isWeekend=d.getDay()===0||d.getDay()===6;
+      const isTodayCol=d.getTime()===today.getTime();
       let cls='time-slot';
       if(isWeekend) cls+=' weekend';
       else if(wH) cls+=' work-hours'; else if(nH) cls+=' off-hours'; else cls+=' normal';
+      if(isTodayCol) cls+=' today-col';
 
       if(blocked){
         const[sh,sm2]=blocked.start_time.split(':').map(Number);
@@ -809,14 +820,18 @@ async function saveNotes(){
   if(!currentViewKey) return;
   const b=bookingsMap[currentViewKey]; if(!b) return;
   const note=document.getElementById('viewNotesInput').value.trim();
-  // Update all slots in the cluster
+  // Update only the slots for this date's period (cluster_key scoped to date_str)
   const filter=b.cluster_key
-    ? db.from('bookings').update({notes:note}).eq('cluster_key',b.cluster_key)
+    ? db.from('bookings').update({notes:note}).eq('cluster_key',b.cluster_key).eq('date_str',b.date_str)
     : db.from('bookings').update({notes:note}).eq('id',b.id);
   const{error}=await filter;
   if(error){showToast('Failed to save notes.',true);return;}
+  // Update local state immediately
+  Object.keys(bookingsMap).forEach(k=>{
+    const r=bookingsMap[k];
+    if(r.date_str===b.date_str&&(b.cluster_key?r.cluster_key===b.cluster_key:r.id===b.id)) r.notes=note;
+  });
   showToast('Notes saved.');
-  // Realtime handles the local state update
 }
 
 async function cancelCurrentBooking(){
@@ -824,21 +839,23 @@ async function cancelCurrentBooking(){
   const b=bookingsMap[currentViewKey]; if(!b) return;
   const past=isSlotPast(new Date(b.date_str+'T12:00:00'),b.slot);
   if(past&&!isAdminAuthed){showToast('Past bookings can only be cancelled by an admin.',true);return;}
-  const clusterSlots=b.cluster_key
-    ? Object.values(bookingsMap).filter(r=>r.cluster_key===b.cluster_key)
-    : [b];
-  const dur=clusterSlots.length>1?` (${clusterSlots.length} slots / ${clusterSlots.length*30} min)`:'';
-  if(!confirm(`Cancel this booking${dur}?`)) return;
+  if(!confirm(`Cancel this booking on ${b.date_str}?`)) return;
 
-  const{error}=b.cluster_key
-    ? await db.from('bookings').delete().eq('cluster_key',b.cluster_key)
-    : await db.from('bookings').delete().eq('id',b.id);
-  if(error){showToast('Failed to remove booking.',true);return;}
-  // Update local state immediately — don't wait for realtime
-  for(const k of Object.keys(bookingsMap)){
+  // Delete all slots with same cluster_key on the same date (one period, one day)
+  const ds=b.date_str; const ck=b.cluster_key;
+  const keysToDelete=Object.keys(bookingsMap).filter(k=>{
     const r=bookingsMap[k];
-    if(b.cluster_key ? r.cluster_key===b.cluster_key : r.id===b.id) delete bookingsMap[k];
+    if(r.date_str!==ds) return false;
+    return ck ? r.cluster_key===ck : r.id===b.id;
+  });
+  let failed=false;
+  for(const k of keysToDelete){
+    const r=bookingsMap[k];
+    const{error}=await db.from('bookings').delete().eq('id',r.id);
+    if(error){failed=true;console.error('Delete error',error);}
+    else delete bookingsMap[k];
   }
+  if(failed){showToast('Some slots failed to remove.',true);return;}
   closeModal('viewModal');
   showToast('Booking removed.');
   renderCalendar();
@@ -867,24 +884,55 @@ async function checkAdminPw(){
 }
 
 function renderAdminPanel(){
-  // Bookings — deduplicate by cluster
+  // Bookings — date window: 3 months back to 1 month forward
+  const now = new Date(); now.setHours(0,0,0,0);
+  const rangeStart = new Date(now); rangeStart.setMonth(rangeStart.getMonth()-3);
+  const rangeEnd   = new Date(now); rangeEnd.setMonth(rangeEnd.getMonth()+1);
+  const todayStr   = dateKey(now);
+
   const seen=new Set();
   const entries=Object.entries(bookingsMap)
     .sort((a,b)=>a[0].localeCompare(b[0]))
     .filter(([k,b])=>{
-      const id=b.cluster_key||k; if(seen.has(id))return false; seen.add(id); return true;
+      const ds=k.split('_')[0];
+      // Deduplicate by cluster_key+date so multi-date bookings show one row per date
+      const id=(b.cluster_key||k)+'|'+ds;
+      if(seen.has(id))return false; seen.add(id); return true;
+    })
+    .filter(([key])=>{
+      const ds=key.split('_')[0];
+      return ds>=dateKey(rangeStart) && ds<=dateKey(rangeEnd);
     });
+
   const tbody=document.getElementById('adminTableBody');
   tbody.innerHTML=entries.length?entries.map(([key,b])=>{
-    const[ds]=key.split('_');
+    const ds=key.split('_')[0];
     const[y,m,d]=ds.split('-'); const dl=`${m}/${d}/${y}`;
     const st=b.cluster_start!==null&&b.cluster_start!==undefined?b.cluster_start:b.slot;
     const en=b.cluster_end  !==null&&b.cluster_end  !==undefined?b.cluster_end+1:b.slot+1;
-    return `<tr><td>${dl}</td><td>${slotToLabel(st)} – ${slotToLabel(en)}</td><td>${(en-st)*30}m</td>
+    const isToday = ds===todayStr;
+    return `<tr data-date="${ds}" ${isToday?'class="today-row"':''}><td>${dl}</td><td>${slotToLabel(st)} – ${slotToLabel(en)}</td><td>${(en-st)*30}m</td>
       <td style="color:var(--linen);font-weight:600">${escHtml(b.name)}</td>
       <td>${escHtml(b.pi)}</td><td>${escHtml(b.notes||'—')}</td>
       <td><button class="btn btn-danger" style="padding:5px 12px;font-size:.82rem;min-height:34px" onclick="adminCancel('${key}')">Remove</button></td></tr>`;
   }).join(''):'<tr><td colspan="7" style="color:var(--text-dim);text-align:center;padding:20px">No bookings yet.</td></tr>';
+
+  // Scroll bookings table to today (or next upcoming)
+  requestAnimationFrame(()=>{
+    const wrapper=document.getElementById('adminTableWrapper');
+    if(!wrapper) return;
+    // Find the first row on or after today
+    const rows=wrapper.querySelectorAll('tr[data-date]');
+    let targetRow=null;
+    for(const row of rows){
+      if(row.dataset.date>=todayStr){targetRow=row;break;}
+    }
+    if(targetRow){
+      const wTop=wrapper.getBoundingClientRect().top;
+      const rTop=targetRow.getBoundingClientRect().top;
+      wrapper.scrollTop += (rTop-wTop) - 40; // 40px offset so header row is visible
+    }
+  });
 
   renderBlocksTable();
 
@@ -896,17 +944,41 @@ function renderAdminPanel(){
 }
 
 function renderBlocksTable(){
-  const sorted=[...blocksList].sort((a,b)=>a.date_str.localeCompare(b.date_str)||a.start_time.localeCompare(b.start_time));
+  const now = new Date(); now.setHours(0,0,0,0);
+  const rangeStart = new Date(now); rangeStart.setMonth(rangeStart.getMonth()-3);
+  const rangeEnd   = new Date(now); rangeEnd.setMonth(rangeEnd.getMonth()+1);
+  const todayStr   = dateKey(now);
+
+  const sorted=[...blocksList]
+    .filter(bl=>bl.date_str>=dateKey(rangeStart) && bl.date_str<=dateKey(rangeEnd))
+    .sort((a,b)=>a.date_str.localeCompare(b.date_str)||a.start_time.localeCompare(b.start_time));
   const tbody=document.getElementById('blocksTableBody');
   tbody.innerHTML=sorted.length?sorted.map(bl=>{
     const[y,m,d]=bl.date_str.split('-');
-    return `<tr>
+    const isToday = bl.date_str===todayStr;
+    return `<tr data-date="${bl.date_str}" ${isToday?'class="today-row"':''}>
       <td>${m}/${d}/${y}</td>
       <td>${timeLabel(bl.start_time)} – ${bl.end_time==='24:00'?'12:00 am':timeLabel(bl.end_time)}</td>
       <td>${escHtml(bl.reason||'Blocked')}</td>
       <td><button class="btn btn-danger" style="padding:4px 10px;font-size:.78rem;min-height:30px" onclick="removeBlock('${bl.id}')">Remove</button></td>
     </tr>`;
   }).join(''):'<tr><td colspan="4" style="color:var(--text-dim);text-align:center;padding:16px">No blocks set.</td></tr>';
+
+  // Scroll blocks table to today (or next upcoming)
+  requestAnimationFrame(()=>{
+    const wrapper=document.getElementById('blocksTableWrapper');
+    if(!wrapper) return;
+    const rows=wrapper.querySelectorAll('tr[data-date]');
+    let targetRow=null;
+    for(const row of rows){
+      if(row.dataset.date>=todayStr){targetRow=row;break;}
+    }
+    if(targetRow){
+      const wTop=wrapper.getBoundingClientRect().top;
+      const rTop=targetRow.getBoundingClientRect().top;
+      wrapper.scrollTop += (rTop-wTop) - 40;
+    }
+  });
 }
 
 async function removeBlock(id){
@@ -914,8 +986,11 @@ async function removeBlock(id){
   if(!confirm(`Remove block: ${bl.date_str} ${bl.start_time}–${bl.end_time}?`)) return;
   const{error}=await db.from('blocks').delete().eq('id',id);
   if(error){showToast('Failed to remove block.',true);return;}
+  // Update local state immediately — don't rely on realtime
+  blocksList=blocksList.filter(b=>b.id!==id);
   showToast('Block removed.');
-  // Realtime handles local state
+  renderCalendar();
+  renderAdminPanel();
 }
 
 // Multi-date block adding
@@ -997,7 +1072,6 @@ async function resolveBlockConflictsForDate(dateStr, newStartSlot, newEndSlot, r
 }
 
 async function resolveBookingConflictsForBlock(dateStr, newStartSlot, newEndSlot){
-  // For each booking overlapping the new block, trim it or remove it
   const seenCk=new Set();
   let trimCount=0, removeCount=0;
 
@@ -1012,53 +1086,45 @@ async function resolveBookingConflictsForBlock(dateStr, newStartSlot, newEndSlot
     const bStart=b.cluster_start!==null&&b.cluster_start!==undefined?b.cluster_start:b.slot;
     const bEnd  =(b.cluster_end  !==null&&b.cluster_end  !==undefined?b.cluster_end  :b.slot)+1; // exclusive
 
-    // Block completely covers booking → remove entirely
-    if(newStartSlot<=bStart && newEndSlot>=bEnd){
-      if(ck) await db.from('bookings').delete().eq('cluster_key',ck);
-      else    await db.from('bookings').delete().eq('id',b.id);
-      for(const k of Object.keys(bookingsMap)){
-        const r=bookingsMap[k];
-        if(ck?r.cluster_key===ck:r.id===b.id) delete bookingsMap[k];
-      }
-      removeCount++;
-      continue;
+    // --- Step 1: Delete ALL original slots for this booking on this date ---
+    for(let ss=bStart;ss<bEnd;ss++){
+      const bk=bookingKey(dateStr,ss);
+      const br=bookingsMap[bk];
+      if(br){ await db.from('bookings').delete().eq('id',br.id); delete bookingsMap[bk]; }
     }
 
-    // Partial overlap — compute surviving slots
+    // --- Step 2: Compute surviving segments (slots outside the block) ---
     const survivingSlots=[];
     for(let ss=bStart;ss<bEnd;ss++){
       if(ss<newStartSlot||ss>=newEndSlot) survivingSlots.push(ss);
     }
-    if(!survivingSlots.length) continue;
 
-    // Delete old booking rows
-    if(ck) await db.from('bookings').delete().eq('cluster_key',ck);
-    else    await db.from('bookings').delete().eq('id',b.id);
-    for(const k of Object.keys(bookingsMap)){
-      const r=bookingsMap[k];
-      if(ck?r.cluster_key===ck:r.id===b.id) delete bookingsMap[k];
-    }
+    if(!survivingSlots.length){ removeCount++; continue; }
 
-    // Re-insert surviving slots as new cluster(s)
-    // Group contiguous surviving slots into one or two segments
+    // --- Step 3: Group contiguous surviving slots into segments ---
     const segments=[];
     let segStart=survivingSlots[0], prev=survivingSlots[0];
     for(let i=1;i<=survivingSlots.length;i++){
       if(i===survivingSlots.length||survivingSlots[i]!==prev+1){
         segments.push({start:segStart,end:prev});
-        if(i<survivingSlots.length){segStart=survivingSlots[i];}
+        if(i<survivingSlots.length) segStart=survivingSlots[i];
       }
       if(i<survivingSlots.length) prev=survivingSlots[i];
     }
+
+    // --- Step 4: Insert each segment as a fully independent new booking ---
     for(const seg of segments){
-      const newCk=seg.end-seg.start>0?makeClusterKey():null;
+      const newCk = (seg.end-seg.start)>0 ? makeClusterKey() : null;
       const rows=[];
       for(let ss=seg.start;ss<=seg.end;ss++){
-        rows.push({date_str:dateStr,slot:ss,cluster_key:newCk,cluster_start:seg.start,cluster_end:seg.end,
-          name:b.name,pi:b.pi,notes:b.notes||'',booked_at:b.booked_at||new Date().toISOString()});
+        rows.push({
+          date_str:dateStr, slot:ss,
+          cluster_key:newCk, cluster_start:seg.start, cluster_end:seg.end,
+          name:b.name, pi:b.pi, notes:b.notes||'', booked_at:b.booked_at||new Date().toISOString()
+        });
       }
       const{data,error}=await db.from('bookings').insert(rows).select();
-      if(!error&&data) for(const r of data) bookingsMap[bookingKey(r.date_str,r.slot)]=r; // keep bookingsMap current
+      if(!error&&data) for(const r of data) bookingsMap[bookingKey(r.date_str,r.slot)]=r;
     }
     trimCount++;
   }
@@ -1110,36 +1176,48 @@ async function addBlock(){
   // Keep realtime suppressed until AFTER reload + render to prevent race-condition duplicates.
   suppressBlockRealtime = true;
   // Small delay lets in-flight realtime events fire and get swallowed by the suppress flag
-  await new Promise(r => setTimeout(r, 400));
+  await new Promise(r => setTimeout(r, 600));
   const [{data: freshBlocks}, {data: freshBookings}] = await Promise.all([
     db.from('blocks').select('*'),
     db.from('bookings').select('*')
   ]);
-  if(freshBlocks)   blocksList   = freshBlocks;
+  if(freshBlocks){
+    // Deduplicate by id just in case
+    const seen=new Set();
+    blocksList=freshBlocks.filter(b=>seen.has(b.id)?false:(seen.add(b.id),true));
+  }
   if(freshBookings){ bookingsMap={}; for(const r of freshBookings) bookingsMap[bookingKey(r.date_str,r.slot)]=r; }
 
   showToast(`Block saved.${notes.length?' ('+notes.join(', ')+')':''}`);
   renderCalendar();
   renderAdminPanel();
-  // Re-enable realtime after render so future events apply cleanly
+  // Keep suppressed a little longer to absorb any late-arriving realtime events
+  await new Promise(r => setTimeout(r, 400));
   suppressBlockRealtime = false;
 }
 
 async function adminCancel(key){
   const b=bookingsMap[key]; if(!b) return;
-  const clusterSlots=b.cluster_key
-    ? Object.values(bookingsMap).filter(r=>r.cluster_key===b.cluster_key)
-    : [b];
-  if(!confirm(`Remove this booking${clusterSlots.length>1?` (${clusterSlots.length} slots)`:''}`+'?')) return;
-  const{error}=b.cluster_key
-    ? await db.from('bookings').delete().eq('cluster_key',b.cluster_key)
-    : await db.from('bookings').delete().eq('id',b.id);
-  if(error){showToast('Failed to remove.',true);return;}
-  // Update local state immediately
-  for(const k of Object.keys(bookingsMap)){
+  if(!confirm('Remove this booking slot?')) return;
+
+  // Collect all map keys that belong to the same date + cluster (one day's block)
+  const ds = b.date_str;
+  const ck = b.cluster_key;
+  const keysToDelete = Object.keys(bookingsMap).filter(k=>{
     const r=bookingsMap[k];
-    if(b.cluster_key ? r.cluster_key===b.cluster_key : r.id===b.id) delete bookingsMap[k];
+    if(r.date_str!==ds) return false;
+    return ck ? r.cluster_key===ck : r.id===b.id;
+  });
+
+  // Delete each slot individually by id
+  let failed=false;
+  for(const k of keysToDelete){
+    const r=bookingsMap[k];
+    const {error}=await db.from('bookings').delete().eq('id',r.id);
+    if(error){ failed=true; console.error('Delete error',error); }
+    else delete bookingsMap[k];
   }
+  if(failed){showToast('Some slots failed to remove.',true);return;}
   showToast('Booking removed.');
   renderCalendar();
   renderAdminPanel();
@@ -1344,7 +1422,7 @@ async function adminAddBooking(){
   const count     = endSlot - startSlot;
   if(count<=0){showToast('End time must be after start time.',true);return;}
 
-  const ck = count>1 ? makeClusterKey() : null;
+  // Each date gets its own cluster_key so cancelling one date doesn't affect others
   let saved=0, skipped=0;
   for(const dateStr of adminBookPendingDates){
     // Check for conflicts on this date
@@ -1353,6 +1431,7 @@ async function adminAddBooking(){
       if(bookingsMap[bookingKey(dateStr,s)]||isSlotBlocked(dateStr,s)){conflict=true;break;}
     }
     if(conflict){skipped++;continue;}
+    const ck = count>1 ? makeClusterKey() : null;
     const rows=[];
     for(let s=startSlot;s<endSlot;s++){
       rows.push({date_str:dateStr,slot:s,cluster_key:ck,cluster_start:startSlot,cluster_end:endSlot-1,name,pi,notes,booked_at:new Date().toISOString()});
