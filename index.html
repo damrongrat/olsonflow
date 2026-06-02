@@ -52,16 +52,21 @@
     /* CALENDAR */
     .calendar{background:var(--surface);border:1px solid var(--border);border-radius:0;overflow:visible;width:100%;display:block;}
     .cal-header{display:grid;grid-template-columns:90px repeat(7,1fr);border-bottom:2px solid var(--border);background:var(--primary);width:100%;}
-    .cal-header-cell{padding:14px 8px;text-align:center;font-size:.85rem;font-weight:600;color:var(--sage);border-right:1px solid var(--border);}
+    .cal-header-cell{padding:14px 8px;text-align:center;font-size:1rem;font-weight:600;color:var(--sage);border-right:1px solid var(--border);}
     .cal-header-cell:last-child{border-right:none;}
     .cal-header-cell.today{color:var(--peach);}
-    .cal-header-cell .day-num{display:block;font-size:1.2rem;font-weight:800;font-family:'Google Sans',sans-serif;margin-top:2px;color:var(--text);}
+    .cal-header-cell .day-num{display:block;font-size:1.4rem;font-weight:800;font-family:'Google Sans',sans-serif;margin-top:2px;color:var(--text);}
     .cal-header-cell.today .day-num{color:var(--peach);}
+    .cal-header-cell.weekend{color:#7a8a94;}
+    .cal-header-cell.weekend .day-num{color:#6a7a84;}
+    .cal-header-cell.today.weekend .day-num{color:var(--peach);}
+    .time-slot.weekend{background:#2e3538;}
+    .time-slot.weekend:not(.booked-cell):not(.past):not(.blocked-cell):hover{background:#363f45;box-shadow:inset 0 0 0 2px #4a5660;}
 
     .cal-rows-wrapper{width:100%;overflow:visible;}
     .cal-row{display:grid;grid-template-columns:90px repeat(7,1fr);border-bottom:1px solid var(--border);height:var(--slot-h);}
     .cal-row:last-child{border-bottom:none;}
-    .time-label{padding:0 10px;font-size:1.2rem;font-weight:600;color:var(--text-dim);border-right:1px solid var(--border);display:flex;align-items:center;justify-content:flex-end;white-space:nowrap;}
+    .time-label{padding:0 6px;font-size:1rem;font-weight:600;color:var(--text-dim);border-right:1px solid var(--border);display:flex;align-items:center;justify-content:flex-end;white-space:nowrap;}
     .time-label.work{color:var(--text-mid);}
     .time-label.off{opacity:.6;}
     .time-slot{height:var(--slot-h);cursor:pointer;transition:background .12s;border-right:1px solid var(--border);border-bottom:1px solid var(--border);}
@@ -85,18 +90,20 @@
     .time-slot.booked-cell .bk-name{font-weight:700;font-size:.78rem;color:#f0d890;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.3;}
     .time-slot.booked-cell .bk-pi{font-size:.68rem;color:#c8a840;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.2;margin-top:1px;}
     .time-slot.booked-cell .bk-period{font-size:.62rem;color:rgba(240,216,138,.7);line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:1px;}
-    .time-slot.cluster-top{border-bottom:1px dashed #8a7030;}
-    .time-slot.cluster-mid{border-top:none;border-bottom:1px dashed #8a7030;}
-    .time-slot.cluster-bot{border-top:none;}
+    .time-slot.cluster-top{border-bottom:1px dashed rgba(240,216,138,.35);border-left:2px solid #c8a84a;border-right:2px solid #c8a84a;border-top:2px solid #c8a84a;border-radius:6px 6px 0 0;}
+    .time-slot.cluster-mid{border-top:none;border-bottom:1px dashed rgba(240,216,138,.35);border-left:2px solid #c8a84a;border-right:2px solid #c8a84a;}
+    .time-slot.cluster-bot{border-top:none;border-left:2px solid #c8a84a;border-right:2px solid #c8a84a;border-bottom:2px solid #c8a84a;border-radius:0 0 6px 6px;}
+    .time-slot.cluster-single{border:2px solid #c8a84a;border-radius:6px;}
     .time-slot.blocked-cell{display:flex;flex-direction:column;justify-content:flex-start;padding:4px 6px;overflow:hidden;background:#7a2020;cursor:not-allowed;}
     .time-slot.blocked-cell.past{background:#3d1010;opacity:1;}
     .time-slot.blocked-cell .bk-name{font-weight:700;font-size:.78rem;color:#f0a0a0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.3;}
     .time-slot.blocked-cell .bk-period{font-size:.62rem;color:rgba(240,160,160,.7);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.2;margin-top:1px;}
     .time-slot.booked-cell:hover:not(.past){filter:brightness(1.15);cursor:pointer;}
     .time-slot.blocked-cell:hover{filter:brightness(1.15);}
-    .time-slot.blocked-cell.cluster-top{border-bottom:1px dashed #b05050;}
-    .time-slot.blocked-cell.cluster-mid{border-top:none;border-bottom:1px dashed #b05050;}
-    .time-slot.blocked-cell.cluster-bot{border-top:none;}
+    .time-slot.blocked-cell.cluster-top{border-bottom:1px dashed rgba(240,160,160,.35)!important;border-left:2px solid #c05050!important;border-right:2px solid #c05050!important;border-top:2px solid #c05050!important;border-radius:6px 6px 0 0;}
+    .time-slot.blocked-cell.cluster-mid{border-top:none!important;border-bottom:1px dashed rgba(240,160,160,.35)!important;border-left:2px solid #c05050!important;border-right:2px solid #c05050!important;}
+    .time-slot.blocked-cell.cluster-bot{border-top:none!important;border-left:2px solid #c05050!important;border-right:2px solid #c05050!important;border-bottom:2px solid #c05050!important;border-radius:0 0 6px 6px;}
+    .time-slot.blocked-cell.cluster-single{border:2px solid #c05050!important;border-radius:6px;}
 
     /* Date chips */
     .date-chip{display:inline-flex;align-items:center;gap:6px;background:rgba(90,69,16,.4);border:1px solid rgba(200,168,74,.4);border-radius:20px;padding:5px 12px 5px 14px;font-size:.85rem;font-weight:600;color:#f0d890;white-space:nowrap;}
@@ -248,15 +255,19 @@
           <div class="form-group" style="margin:0"><label style="font-size:.78rem;color:#a88830;">End Time</label><select id="adminBookEnd" style="width:140px;background:#1e1808;border:2px solid rgba(200,168,74,.4);border-radius:8px;padding:8px 10px;font-family:'Google Sans',sans-serif;font-size:.9rem;color:var(--text);outline:none;"></select></div>
         </div>
         <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:10px;">
-          <div class="form-group" style="margin:0;flex:1;min-width:160px;"><label style="font-size:.78rem;color:#a88830;">Name *</label><input type="text" id="adminBookName" placeholder="First Last" style="width:100%;background:#1e1808;border:2px solid rgba(200,168,74,.4);border-radius:8px;padding:8px 12px;font-family:'Google Sans',sans-serif;font-size:.95rem;color:var(--text);outline:none;min-height:44px;"></div>
-          <div class="form-group" style="margin:0;flex:1;min-width:160px;"><label style="font-size:.78rem;color:#a88830;">PI / Lab *</label><input type="text" id="adminBookPI" placeholder="Dr. Smith Lab" style="width:100%;background:#1e1808;border:2px solid rgba(200,168,74,.4);border-radius:8px;padding:8px 12px;font-family:'Google Sans',sans-serif;font-size:.95rem;color:var(--text);outline:none;min-height:44px;"></div>
+          <div class="form-group" style="margin:0;flex:1;min-width:160px;"><label style="font-size:.78rem;color:#a88830;">Name *</label><input type="text" id="adminBookName" placeholder="e.g. Liam" style="width:100%;background:#1e1808;border:2px solid rgba(200,168,74,.4);border-radius:8px;padding:8px 12px;font-family:'Google Sans',sans-serif;font-size:.95rem;color:var(--text);outline:none;min-height:44px;"></div>
+          <div class="form-group" style="margin:0;flex:1;min-width:160px;"><label style="font-size:.78rem;color:#a88830;">PI / Lab *</label><input type="text" id="adminBookPI" placeholder="e.g. Olson" style="width:100%;background:#1e1808;border:2px solid rgba(200,168,74,.4);border-radius:8px;padding:8px 12px;font-family:'Google Sans',sans-serif;font-size:.95rem;color:var(--text);outline:none;min-height:44px;"></div>
         </div>
         <div class="form-group" style="margin-bottom:10px;"><label style="font-size:.78rem;color:#a88830;">Notes (optional)</label><textarea id="adminBookNotes" placeholder="Sample type, experiment, etc." style="width:100%;min-height:60px;resize:vertical;background:#1e1808;border:2px solid rgba(200,168,74,.4);border-radius:8px;padding:8px 10px;font-family:'Google Sans',sans-serif;font-size:.9rem;color:var(--text);outline:none;"></textarea></div>
         <div style="margin-bottom:10px;">
           <div style="font-size:.78rem;font-weight:700;color:#a88830;margin-bottom:8px;">Dates</div>
           <div id="adminBookDatesDisplay" style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;"></div>
           <div style="display:flex;gap:8px;align-items:center;margin-top:8px;">
-            <input type="date" id="adminBookDateInline" style="color-scheme:dark;background:#1e1808;border:2px solid rgba(200,168,74,.4);border-radius:8px;padding:7px 10px;font-family:'Google Sans',sans-serif;font-size:.9rem;color:var(--text);outline:none;min-height:38px;">
+            <div style="position:relative;display:inline-flex;align-items:center;">
+              <input type="text" id="adminBookDateInline" placeholder="MM/DD/YYYY" maxlength="10" oninput="dateMask(this)" style="background:#1e1808;border:2px solid rgba(200,168,74,.4);border-radius:8px;padding:7px 36px 7px 10px;font-family:'Google Sans',sans-serif;font-size:.9rem;color:var(--text);outline:none;min-height:38px;width:160px;letter-spacing:.04em;">
+              <span onclick="(()=>{const p=document.getElementById('adminBookDatePicker');p.value='';p.showPicker?p.showPicker():p.click()})()" style="position:absolute;right:8px;cursor:pointer;font-size:1rem;color:#c8a840;user-select:none;" title="Pick date">📅</span>
+              <input type="date" id="adminBookDatePicker" style="position:absolute;opacity:0;pointer-events:none;width:0;height:0;" onchange="syncDatePicker('adminBookDatePicker','adminBookDateInline')">
+            </div>
             <button class="btn" style="padding:6px 16px;min-height:38px;font-size:.9rem;border-color:rgba(200,168,74,.5);color:#c8a840;" onclick="addAdminBookDateInline()">Add Date</button>
           </div>
         </div>
@@ -287,7 +298,11 @@
           <div style="font-size:.78rem;font-weight:700;color:#b06060;margin-bottom:8px;">Dates</div>
           <div id="blockDatesDisplay" style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:8px;"></div>
           <div style="display:flex;gap:8px;align-items:center;">
-            <input type="date" id="blockDateInline" style="color-scheme:dark;background:#2a1515;border:2px solid rgba(160,60,60,.5);border-radius:8px;padding:7px 10px;font-family:'Google Sans',sans-serif;font-size:.9rem;color:var(--text);outline:none;min-height:38px;">
+            <div style="position:relative;display:inline-flex;align-items:center;">
+              <input type="text" id="blockDateInline" placeholder="MM/DD/YYYY" maxlength="10" oninput="dateMask(this)" style="background:#2a1515;border:2px solid rgba(160,60,60,.5);border-radius:8px;padding:7px 36px 7px 10px;font-family:'Google Sans',sans-serif;font-size:.9rem;color:var(--text);outline:none;min-height:38px;width:160px;letter-spacing:.04em;">
+              <span onclick="(()=>{const p=document.getElementById('blockDatePicker');p.value='';p.showPicker?p.showPicker():p.click()})()" style="position:absolute;right:8px;cursor:pointer;font-size:1rem;color:#c08080;user-select:none;" title="Pick date">📅</span>
+              <input type="date" id="blockDatePicker" style="position:absolute;opacity:0;pointer-events:none;width:0;height:0;" onchange="syncDatePicker('blockDatePicker','blockDateInline')">
+            </div>
             <button class="btn" style="padding:6px 16px;min-height:38px;font-size:.9rem;border-color:rgba(160,60,60,.6);color:#c08080;" onclick="addBlockDateInline()">Add Date</button>
           </div>
         </div>
@@ -337,8 +352,8 @@
       </div>
     </div>
     <div id="bookConflictMsg" style="display:none;color:#e07070;font-size:.85rem;margin-bottom:12px;padding:8px 12px;background:rgba(90,32,32,.35);border-radius:6px;border:1px solid #7a3030;"></div>
-    <div class="form-group"><label>Your Name *</label><input type="text" id="bookName" placeholder="First Last"/></div>
-    <div class="form-group"><label>PI / Lab Name *</label><input type="text" id="bookPI" placeholder="Dr. Smith Lab"/></div>
+    <div class="form-group"><label>Your Name *</label><input type="text" id="bookName" placeholder="e.g. Liam"/></div>
+    <div class="form-group"><label>PI / Lab Name *</label><input type="text" id="bookPI" placeholder="e.g. Olson"/></div>
     <div class="form-group"><label>Notes (optional)</label><textarea id="bookNotes" placeholder="Sample type, experiment, etc."></textarea></div>
     <div class="modal-actions">
       <button class="btn" onclick="closeModal('bookModal')">Cancel</button>
@@ -414,7 +429,7 @@ const ADMIN_PASSWORD_HASH = '39d15e1d7e45337d6b89d317ed61e6875ac30cf3057a53e6d6b
 const SLOT_H               = 68;
 const SLOT_NIGHT_EARLY_START = 0,  SLOT_NIGHT_EARLY_END = 12;
 const SLOT_WORK_START        = 18, SLOT_WORK_END        = 33;
-const SLOT_NIGHT_LATE_START  = 38, SLOT_NIGHT_LATE_END  = 47;
+const SLOT_NIGHT_LATE_START  = 40, SLOT_NIGHT_LATE_END  = 47;
 const DAYS   = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
 const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 
@@ -438,8 +453,29 @@ let adminBookPendingDates = [];
 // ══════════════════════════════════════════
 // UTILITIES
 // ══════════════════════════════════════════
-function slotToLabel(s){ return `${String(Math.floor(s/2)).padStart(2,'0')}:${s%2===0?'00':'30'}`; }
+function slotToValue(s){
+  // Internal 24hr string used as select option value and parsed by timeStrToSlot
+  if(s===48) return '24:00';
+  return `${String(Math.floor(s/2)).padStart(2,'0')}:${s%2===0?'00':'30'}`;
+}
+function slotToLabel(s){
+  // Human-readable 12hr display
+  if(s===48) return '12:00 am';
+  const h24=Math.floor(s/2), m=s%2===0?'00':'30';
+  if(h24===0)  return `12:${m} am`;
+  if(h24===12) return `12:${m} pm`;
+  return h24<12 ? `${h24}:${m} am` : `${h24-12}:${m} pm`;
+}
+function timeLabel(value){
+  // Convert a 24hr value string to 12hr label
+  if(value==='24:00') return '12:00 am';
+  const[h,m]=value.split(':').map(Number);
+  if(h===0)  return `12:${String(m).padStart(2,'0')} am`;
+  if(h===12) return `12:${String(m).padStart(2,'0')} pm`;
+  return h<12 ? `${h}:${String(m).padStart(2,'0')} am` : `${h-12}:${String(m).padStart(2,'0')} pm`;
+}
 function dateKey(d)    { return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; }
+function fmtDate(ds)   { const[y,m,d]=ds.split('-'); return `${m}/${d}/${y}`; }
 function bookingKey(ds,s){ return `${ds}_${s}`; }
 function escHtml(s)    { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 function makeClusterKey(){ return `ck_${Date.now()}_${Math.random().toString(36).slice(2,7)}`; }
@@ -528,7 +564,10 @@ function handleBookingChange(payload){
   if(isAdminAuthed) renderAdminPanel();
 }
 
+let suppressBlockRealtime = false; // set true during bulk addBlock ops
+
 function handleBlockChange(payload){
+  if(suppressBlockRealtime) return; // ignore realtime during bulk ops
   const { eventType, new: newRow, old: oldRow } = payload;
   if(eventType === 'INSERT'){
     blocksList.push(newRow);
@@ -571,7 +610,8 @@ function renderCalendar(){
   html+='<div class="cal-header"><div class="cal-header-cell"></div>';
   for(const d of days){
     const isTod=d.getTime()===today.getTime();
-    html+=`<div class="cal-header-cell${isTod?' today':''}">
+    const isWknd=d.getDay()===0||d.getDay()===6;
+    html+=`<div class="cal-header-cell${isTod?' today':''}${isWknd?' weekend':''}">
       ${DAYS[d.getDay()]}<span class="day-num">${d.getDate()}</span></div>`;
   }
   html+='</div>';
@@ -582,7 +622,7 @@ function renderCalendar(){
   html+=`<div class="offhours-toggle-row" onclick="toggleNightEarly()">
     <div class="offhours-toggle-label${nightEarlyExpanded?' expanded':''}">
       <span class="toggle-icon">▶</span>
-      <span>${nightEarlyExpanded?'Hide':'Show'} off-hours &nbsp;<strong>00:00 – 06:30</strong></span>
+      <span>${nightEarlyExpanded?'Hide':'Show'} off-hours &nbsp;<strong>12:00 am – 6:00 am</strong></span>
     </div></div>`;
 
   for(let s=0;s<48;s++){
@@ -590,7 +630,7 @@ function renderCalendar(){
       html+=`<div class="offhours-toggle-row" onclick="toggleNightLate()">
         <div class="offhours-toggle-label${nightLateExpanded?' expanded':''}">
           <span class="toggle-icon">▶</span>
-          <span>${nightLateExpanded?'Hide':'Show'} off-hours &nbsp;<strong>19:00 – 23:30</strong></span>
+          <span>${nightLateExpanded?'Hide':'Show'} off-hours &nbsp;<strong>8:00 pm – 12:00 am</strong></span>
         </div></div>`;
     }
     if(isNightEarly(s)&&!nightEarlyExpanded) continue;
@@ -608,8 +648,10 @@ function renderCalendar(){
       const blocked=isSlotBlocked(dKey,s);
       const inWin=isWithinBookingWindow(d);
 
+      const isWeekend=d.getDay()===0||d.getDay()===6;
       let cls='time-slot';
-      if(wH) cls+=' work-hours'; else if(nH) cls+=' off-hours'; else cls+=' normal';
+      if(isWeekend) cls+=' weekend';
+      else if(wH) cls+=' work-hours'; else if(nH) cls+=' off-hours'; else cls+=' normal';
 
       if(blocked){
         const[sh,sm2]=blocked.start_time.split(':').map(Number);
@@ -618,11 +660,10 @@ function renderCalendar(){
         const bES=Math.max(0,(eh*2+(em>0?1:0))-1);
         const isFirst=(s===bSS), isLast=(s===bES);
         cls+=' blocked-cell'+(past?' past':'');
-        if(bSS!==bES){
-          if(isFirst) cls+=' cluster-top';
-          else if(isLast) cls+=' cluster-bot';
-          else cls+=' cluster-mid';
-        }
+        if(bSS===bES){ cls+=' cluster-single'; }
+        else if(isFirst) cls+=' cluster-top';
+        else if(isLast)  cls+=' cluster-bot';
+        else             cls+=' cluster-mid';
         const inner=isFirst
           ?`<span class="bk-name">${escHtml(blocked.reason||'Blocked')}</span>
             <span class="bk-period">${blocked.start_time} – ${blocked.end_time}</span>`:'';
@@ -634,11 +675,10 @@ function renderCalendar(){
         const clStart=booking.cluster_start!==null&&booking.cluster_start!==undefined?booking.cluster_start:s;
         const clEnd  =booking.cluster_end  !==null&&booking.cluster_end  !==undefined?booking.cluster_end  :s;
         const isFirst=(s===clStart), isLast=(s===clEnd);
-        if(clStart!==clEnd){
-          if(isFirst) cls+=' cluster-top';
-          else if(isLast) cls+=' cluster-bot';
-          else cls+=' cluster-mid';
-        }
+        if(clStart===clEnd){ cls+=' cluster-single'; }
+        else if(isFirst) cls+=' cluster-top';
+        else if(isLast)  cls+=' cluster-bot';
+        else             cls+=' cluster-mid';
         const timeStr=`${slotToLabel(clStart)} – ${slotToLabel(clEnd+1)}`;
         const inner=isFirst
           ?`<span class="bk-name">${escHtml(booking.name)}</span>
@@ -665,7 +705,7 @@ function renderCalendar(){
 function openBookModal(dateStr,slot){
   pendingSlot={dateStr,slot:parseInt(slot)};
   const startSel = document.getElementById('bookStartTime');
-  startSel.value = slotToLabel(parseInt(slot));
+  startSel.value = slotToValue(parseInt(slot));
   refreshBookEndTimes(dateStr, parseInt(slot), true);
   document.getElementById('bookName').value =localStorage.getItem('fc_name')||'';
   document.getElementById('bookPI').value   =localStorage.getItem('fc_pi')||'';
@@ -683,8 +723,8 @@ function updateBookSlotInfo(){
   const endSlot  =timeStrToSlot(endTime);
   const count=endSlot-startSlot;
   const[y,m,d]=dateStr.split('-');
-  const label=`${DAYS[new Date(dateStr+'T12:00:00').getDay()]}, ${MONTHS[Number(m)-1]} ${Number(d)}, ${y}`;
-  document.getElementById('bookSlotInfo').textContent=`${label}  ·  ${startTime} – ${endTime}`;
+  const label=`${DAYS[new Date(dateStr+'T12:00:00').getDay()]}, ${m}/${d}/${y}`;
+  document.getElementById('bookSlotInfo').textContent=`${label}  ·  ${timeLabel(startTime)} – ${timeLabel(endTime)}`;
   pendingSlot.slot=startSlot;
   const msgEl=document.getElementById('bookConflictMsg');
   const btn  =document.getElementById('confirmBookBtn');
@@ -749,7 +789,7 @@ function openViewModal(bKey,dateStr,slot){
   currentViewKey=bKey;
   const past=isSlotPast(new Date(dateStr+'T12:00:00'),parseInt(slot));
   const[y,m,d]=dateStr.split('-');
-  const label=`${DAYS[new Date(dateStr+'T12:00:00').getDay()]}, ${MONTHS[Number(m)-1]} ${Number(d)}, ${y}`;
+  const label=`${DAYS[new Date(dateStr+'T12:00:00').getDay()]}, ${m}/${d}/${y}`;
   const startSlot=b.cluster_start!==null&&b.cluster_start!==undefined?b.cluster_start:parseInt(slot);
   const endSlot  =b.cluster_end  !==null&&b.cluster_end  !==undefined?b.cluster_end+1:parseInt(slot)+1;
   document.getElementById('viewSlotInfo').textContent=`${label}  ·  ${slotToLabel(startSlot)} – ${slotToLabel(endSlot)}`;
@@ -837,7 +877,7 @@ function renderAdminPanel(){
   const tbody=document.getElementById('adminTableBody');
   tbody.innerHTML=entries.length?entries.map(([key,b])=>{
     const[ds]=key.split('_');
-    const[y,m,d]=ds.split('-'); const dl=`${MONTHS[Number(m)-1]} ${Number(d)}, ${y}`;
+    const[y,m,d]=ds.split('-'); const dl=`${m}/${d}/${y}`;
     const st=b.cluster_start!==null&&b.cluster_start!==undefined?b.cluster_start:b.slot;
     const en=b.cluster_end  !==null&&b.cluster_end  !==undefined?b.cluster_end+1:b.slot+1;
     return `<tr><td>${dl}</td><td>${slotToLabel(st)} – ${slotToLabel(en)}</td><td>${(en-st)*30}m</td>
@@ -861,8 +901,8 @@ function renderBlocksTable(){
   tbody.innerHTML=sorted.length?sorted.map(bl=>{
     const[y,m,d]=bl.date_str.split('-');
     return `<tr>
-      <td>${MONTHS[Number(m)-1]} ${Number(d)}, ${y}</td>
-      <td>${bl.start_time} – ${bl.end_time}</td>
+      <td>${m}/${d}/${y}</td>
+      <td>${timeLabel(bl.start_time)} – ${bl.end_time==='24:00'?'12:00 am':timeLabel(bl.end_time)}</td>
       <td>${escHtml(bl.reason||'Blocked')}</td>
       <td><button class="btn btn-danger" style="padding:4px 10px;font-size:.78rem;min-height:30px" onclick="removeBlock('${bl.id}')">Remove</button></td>
     </tr>`;
@@ -881,8 +921,8 @@ async function removeBlock(id){
 // Multi-date block adding
 function addBlockDateInline(){
   const inp=document.getElementById('blockDateInline');
-  const d=inp.value;
-  if(!d){showToast('Pick a date first.',true);return;}
+  const d=parseDateInput(inp.value);
+  if(!d){showToast('Enter a valid date (MM/DD/YYYY).',true);return;}
   if(blockPendingDates.includes(d)){showToast('Date already added.',true);return;}
   blockPendingDates.push(d);
   renderBlockDatesDisplay();
@@ -894,54 +934,195 @@ function renderBlockDatesDisplay(){
   if(!el) return;
   el.innerHTML=blockPendingDates.map(d=>{
     const[y,m,dd]=d.split('-');
-    return `<span class="date-chip red"><span>${MONTHS[Number(m)-1]} ${Number(dd)}, ${y}</span><button onclick="removeBlockDate('${d}')" title="Remove">×</button></span>`;
+    return `<span class="date-chip red"><span>${m}/${Number(dd)}/${y}</span><button onclick="removeBlockDate('${d}')" title="Remove">×</button></span>`;
   }).join('');
+}
+
+// ── Block conflict helpers ────────────────────────────────────────────────────
+function slotToTimeStr(slot){
+  // Convert slot number to HH:MM string (slot 48 = 24:00)
+  if(slot>=48) return '24:00';
+  return `${String(Math.floor(slot/2)).padStart(2,'0')}:${slot%2===0?'00':'30'}`;
+}
+
+async function resolveBlockConflictsForDate(dateStr, newStartSlot, newEndSlot, reason){
+  // newEndSlot is exclusive (e.g. 08:00-10:00 means slots 16..19, newEndSlot=20)
+  const existingBlocks = blocksList.filter(b=>b.date_str===dateStr);
+  const toDelete=[], toInsert=[];
+
+  for(const ex of existingBlocks){
+    const[esh,esm]=ex.start_time.split(':').map(Number);
+    const[eeh,eem]=ex.end_time  .split(':').map(Number);
+    const exStart = esh*2+(esm>=30?1:0);
+    const exEnd   = eeh===24?48:eeh*2+(eem>0?1:0);
+
+    // No overlap — leave unchanged
+    if(newEndSlot<=exStart || newStartSlot>=exEnd) continue;
+
+    // New block completely covers existing → remove existing
+    if(newStartSlot<=exStart && newEndSlot>=exEnd){
+      toDelete.push(ex.id);
+      continue;
+    }
+
+    // Partial overlap — trim/split existing block
+    toDelete.push(ex.id);
+
+    // New block overlaps start of existing → keep right remainder
+    if(newStartSlot<=exStart && newEndSlot<exEnd){
+      toInsert.push({date_str:dateStr, start_time:slotToTimeStr(newEndSlot), end_time:ex.end_time, reason:ex.reason||'Blocked'});
+    }
+    // New block overlaps end of existing → keep left remainder
+    else if(newStartSlot>exStart && newEndSlot>=exEnd){
+      toInsert.push({date_str:dateStr, start_time:ex.start_time, end_time:slotToTimeStr(newStartSlot), reason:ex.reason||'Blocked'});
+    }
+    // New block is inside existing → split into two
+    else if(newStartSlot>exStart && newEndSlot<exEnd){
+      toInsert.push({date_str:dateStr, start_time:ex.start_time,           end_time:slotToTimeStr(newStartSlot), reason:ex.reason||'Blocked'});
+      toInsert.push({date_str:dateStr, start_time:slotToTimeStr(newEndSlot), end_time:ex.end_time,               reason:ex.reason||'Blocked'});
+    }
+  }
+
+  // Apply deletions
+  for(const id of toDelete){
+    await db.from('blocks').delete().eq('id',id);
+    blocksList=blocksList.filter(b=>b.id!==id);
+  }
+  // Apply insertions (trimmed/split remnants)
+  if(toInsert.length){
+    await db.from('blocks').insert(toInsert);
+    // Don't push to blocksList here — addBlock will do a full fresh reload
+  }
+  return toDelete.length;
+}
+
+async function resolveBookingConflictsForBlock(dateStr, newStartSlot, newEndSlot){
+  // For each booking overlapping the new block, trim it or remove it
+  const seenCk=new Set();
+  let trimCount=0, removeCount=0;
+
+  for(let s=newStartSlot; s<Math.min(newEndSlot,48); s++){
+    const b=bookingsMap[bookingKey(dateStr,s)];
+    if(!b) continue;
+    const ck=b.cluster_key;
+    const uid=ck||b.id;
+    if(seenCk.has(uid)) continue;
+    seenCk.add(uid);
+
+    const bStart=b.cluster_start!==null&&b.cluster_start!==undefined?b.cluster_start:b.slot;
+    const bEnd  =(b.cluster_end  !==null&&b.cluster_end  !==undefined?b.cluster_end  :b.slot)+1; // exclusive
+
+    // Block completely covers booking → remove entirely
+    if(newStartSlot<=bStart && newEndSlot>=bEnd){
+      if(ck) await db.from('bookings').delete().eq('cluster_key',ck);
+      else    await db.from('bookings').delete().eq('id',b.id);
+      for(const k of Object.keys(bookingsMap)){
+        const r=bookingsMap[k];
+        if(ck?r.cluster_key===ck:r.id===b.id) delete bookingsMap[k];
+      }
+      removeCount++;
+      continue;
+    }
+
+    // Partial overlap — compute surviving slots
+    const survivingSlots=[];
+    for(let ss=bStart;ss<bEnd;ss++){
+      if(ss<newStartSlot||ss>=newEndSlot) survivingSlots.push(ss);
+    }
+    if(!survivingSlots.length) continue;
+
+    // Delete old booking rows
+    if(ck) await db.from('bookings').delete().eq('cluster_key',ck);
+    else    await db.from('bookings').delete().eq('id',b.id);
+    for(const k of Object.keys(bookingsMap)){
+      const r=bookingsMap[k];
+      if(ck?r.cluster_key===ck:r.id===b.id) delete bookingsMap[k];
+    }
+
+    // Re-insert surviving slots as new cluster(s)
+    // Group contiguous surviving slots into one or two segments
+    const segments=[];
+    let segStart=survivingSlots[0], prev=survivingSlots[0];
+    for(let i=1;i<=survivingSlots.length;i++){
+      if(i===survivingSlots.length||survivingSlots[i]!==prev+1){
+        segments.push({start:segStart,end:prev});
+        if(i<survivingSlots.length){segStart=survivingSlots[i];}
+      }
+      if(i<survivingSlots.length) prev=survivingSlots[i];
+    }
+    for(const seg of segments){
+      const newCk=seg.end-seg.start>0?makeClusterKey():null;
+      const rows=[];
+      for(let ss=seg.start;ss<=seg.end;ss++){
+        rows.push({date_str:dateStr,slot:ss,cluster_key:newCk,cluster_start:seg.start,cluster_end:seg.end,
+          name:b.name,pi:b.pi,notes:b.notes||'',booked_at:b.booked_at||new Date().toISOString()});
+      }
+      const{data,error}=await db.from('bookings').insert(rows).select();
+      if(!error&&data) for(const r of data) bookingsMap[bookingKey(r.date_str,r.slot)]=r; // keep bookingsMap current
+    }
+    trimCount++;
+  }
+  return {trimCount,removeCount};
 }
 
 async function addBlock(){
   // Auto-add whatever is typed in the inline date input
   const _bd=document.getElementById('blockDateInline');
-  if(_bd&&_bd.value&&!blockPendingDates.includes(_bd.value)){blockPendingDates.push(_bd.value);_bd.value='';renderBlockDatesDisplay();}
+  const _bdp=parseDateInput(_bd?_bd.value:'');if(_bdp&&!blockPendingDates.includes(_bdp)){blockPendingDates.push(_bdp);if(_bd)_bd.value='';renderBlockDatesDisplay();}
   const start =document.getElementById('blockStart').value;
   const end   =document.getElementById('blockEnd').value;
   const reason=document.getElementById('blockReason').value.trim()||'Blocked';
   if(blockPendingDates.length===0){showToast('Add at least one date.',true);return;}
   if(!start||!end){showToast('Set start and end times.',true);return;}
-  if(start>=end){showToast('End must be after start.',true);return;}
+  if(start>=end&&end!=='24:00'){showToast('End must be after start.',true);return;}
 
-  // Find and delete any bookings that conflict with the new block (admin overwrite)
   const[sh,sm]=start.split(':').map(Number);
-  const[eh,em]=end.split(':').map(Number);
-  const blockStartSlot = sh*2+(sm>=30?1:0);
-  const blockEndSlot   = eh*2+(em>0?1:0); // exclusive
-  const conflictingIds   = [];
-  const conflictingCkeys = new Set();
+  const newStartSlot=sh*2+(sm>=30?1:0);
+  const newEndSlot  =end==='24:00'?48:timeStrToSlot(end);
+
+  let totalBookingChanges=0, totalBlockConflicts=0;
+
   for(const dateStr of blockPendingDates){
-    for(let s=blockStartSlot; s<blockEndSlot; s++){
-      const b=bookingsMap[bookingKey(dateStr,s)];
-      if(!b) continue;
-      if(b.cluster_key) conflictingCkeys.add(b.cluster_key);
-      else conflictingIds.push(b.id);
-    }
-  }
-  let cancelledCount=0;
-  for(const ck of conflictingCkeys){
-    await db.from('bookings').delete().eq('cluster_key',ck);
-    cancelledCount++;
-  }
-  for(const id of conflictingIds){
-    await db.from('bookings').delete().eq('id',id);
-    cancelledCount++;
+    // 1. Resolve conflicts with existing blocks (trim/split/remove them)
+    const bConf=await resolveBlockConflictsForDate(dateStr,newStartSlot,newEndSlot,reason);
+    totalBlockConflicts+=bConf;
+
+    // 2. Trim/remove normal bookings that overlap
+    const{trimCount,removeCount}=await resolveBookingConflictsForBlock(dateStr,newStartSlot,newEndSlot);
+    totalBookingChanges+=trimCount+removeCount;
   }
 
-  const rows=blockPendingDates.map(date=>({date_str:date, start_time:start, end_time:end, reason}));
+  // Insert the new block
+  const endStr=end==='24:00'?'24:00':end;
+  const rows=blockPendingDates.map(date=>({date_str:date,start_time:start,end_time:endStr,reason}));
   const{error}=await db.from('blocks').insert(rows);
   if(error){showToast('Failed to save blocks: '+error.message,true);return;}
+
   blockPendingDates=[];
   renderBlockDatesDisplay();
   document.getElementById('blockReason').value='';
-  const overwriteNote = cancelledCount>0 ? ` (${cancelledCount} conflicting booking${cancelledCount>1?'s':''} removed)` : '';
-  showToast(`Blocked ${start}–${end} on ${rows.length} date${rows.length===1?'':'s'}.${overwriteNote}`);
+
+  const notes=[];
+  if(totalBlockConflicts>0) notes.push(`${totalBlockConflicts} existing block${totalBlockConflicts>1?'s':''} adjusted`);
+  if(totalBookingChanges>0) notes.push(`${totalBookingChanges} booking${totalBookingChanges>1?'s':''} trimmed/removed`);
+
+  // Reload both blocks AND bookings fresh from DB for full consistency.
+  // Keep realtime suppressed until AFTER reload + render to prevent race-condition duplicates.
+  suppressBlockRealtime = true;
+  // Small delay lets in-flight realtime events fire and get swallowed by the suppress flag
+  await new Promise(r => setTimeout(r, 400));
+  const [{data: freshBlocks}, {data: freshBookings}] = await Promise.all([
+    db.from('blocks').select('*'),
+    db.from('bookings').select('*')
+  ]);
+  if(freshBlocks)   blocksList   = freshBlocks;
+  if(freshBookings){ bookingsMap={}; for(const r of freshBookings) bookingsMap[bookingKey(r.date_str,r.slot)]=r; }
+
+  showToast(`Block saved.${notes.length?' ('+notes.join(', ')+')':''}`);
+  renderCalendar();
+  renderAdminPanel();
+  // Re-enable realtime after render so future events apply cleanly
+  suppressBlockRealtime = false;
 }
 
 async function adminCancel(key){
@@ -1044,13 +1225,13 @@ function fmtMin(m){const h=Math.floor(m/60),mn=m%60;return h>0?(mn>0?`${h}h ${mn
 function exportReportCSV(from,to){
   const{weeks,bookingSummary,blockSummary,totalBookingMin,totalBlockMin}=buildReportData(from,to);
   let csv='FLOW CYTOMETER USAGE REPORT — HANS 301\n';
-  csv+=`Report period: ${from} to ${to}\n\n`;
+  csv+=`Report period: ${fmtDate(from)} to ${fmtDate(to)}\n\n`;
   csv+='=== BOOKINGS ===\nDate,Name,PI/Lab,Start,End,Duration (min)\n';
-  bookingSummary.forEach(b=>csv+=`${b.date},"${b.name}","${b.pi}",${b.start},${b.end},${b.minutes}\n`);
+  bookingSummary.forEach(b=>csv+=`${fmtDate(b.date)},"${b.name}","${b.pi}",${b.start},${b.end},${b.minutes}\n`);
   csv+='\n=== MAINTENANCE BLOCKS ===\nDate,Start,End,Reason,Duration (min)\n';
-  blockSummary.forEach(b=>csv+=`${b.date},${b.start},${b.end},"${b.reason}",${b.minutes}\n`);
+  blockSummary.forEach(b=>csv+=`${fmtDate(b.date)},${b.start},${b.end},"${b.reason}",${b.minutes}\n`);
   csv+='\n=== WEEKLY SUMMARY ===\nWeek of,Booking Time,Block Time\n';
-  Object.entries(weeks).sort((a,b)=>a[0].localeCompare(b[0])).forEach(([wk,w])=>{csv+=`${wk},${fmtMin(w.bookingMin)},${fmtMin(w.blockMin)}\n`;});
+  Object.entries(weeks).sort((a,b)=>a[0].localeCompare(b[0])).forEach(([wk,w])=>{csv+=`${fmtDate(wk)},${fmtMin(w.bookingMin)},${fmtMin(w.blockMin)}\n`;});
   csv+=`\n=== TOTALS ===\nTotal Booking Time,${fmtMin(totalBookingMin)}\nTotal Block Time,${fmtMin(totalBlockMin)}\n`;
   const blob=new Blob([csv],{type:'text/csv'});
   const url=URL.createObjectURL(blob);
@@ -1061,9 +1242,9 @@ function exportReportCSV(from,to){
 
 function exportReportHTMLFn(from,to){
   const{weeks,bookingSummary,blockSummary,totalBookingMin,totalBlockMin}=buildReportData(from,to);
-  const wkRows=Object.entries(weeks).sort((a,b)=>a[0].localeCompare(b[0])).map(([wk,w])=>`<tr><td>Week of ${wk}</td><td>${fmtMin(w.bookingMin)}</td><td>${fmtMin(w.blockMin)}</td></tr>`).join('');
-  const bkRows=bookingSummary.map(b=>`<tr><td>${b.date}</td><td>${b.name}</td><td>${b.pi}</td><td>${b.start} – ${b.end}</td><td>${b.minutes} min</td></tr>`).join('');
-  const blRows=blockSummary.map(b=>`<tr><td>${b.date}</td><td>${b.start} – ${b.end}</td><td>${b.reason}</td><td>${b.minutes} min</td></tr>`).join('');
+  const wkRows=Object.entries(weeks).sort((a,b)=>a[0].localeCompare(b[0])).map(([wk,w])=>`<tr><td>Week of ${fmtDate(wk)}</td><td>${fmtMin(w.bookingMin)}</td><td>${fmtMin(w.blockMin)}</td></tr>`).join('');
+  const bkRows=bookingSummary.map(b=>`<tr><td>${fmtDate(b.date)}</td><td>${b.name}</td><td>${b.pi}</td><td>${b.start} – ${b.end}</td><td>${b.minutes} min</td></tr>`).join('');
+  const blRows=blockSummary.map(b=>`<tr><td>${fmtDate(b.date)}</td><td>${b.start} – ${b.end}</td><td>${b.reason}</td><td>${b.minutes} min</td></tr>`).join('');
   const html=`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Flow Cytometer Report ${from} – ${to}</title>
   <link href='https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;700&display=swap' rel='stylesheet'>
   <style>body{font-family:'Google Sans','Segoe UI',Arial,sans-serif;background:#f5f0eb;color:#2b2318;padding:40px;max-width:900px;margin:auto;}
@@ -1074,7 +1255,7 @@ function exportReportHTMLFn(from,to){
   .total-item{text-align:center;}.total-item .val{font-size:1.8rem;font-weight:700;color:#E4A489;}.total-item .lbl{font-size:.8rem;opacity:.8;}
   @media print{body{padding:20px;background:white;}}</style></head><body>
   <h1>Flow Cytometer Usage Report</h1>
-  <div class="period">HANS 301 &nbsp;·&nbsp; ${from} to ${to} &nbsp;·&nbsp; Generated ${new Date().toLocaleString()}</div>
+  <div class="period">HANS 301 &nbsp;·&nbsp; ${fmtDate(from)} to ${fmtDate(to)} &nbsp;·&nbsp; Generated ${new Date().toLocaleString()}</div>
   <div class="totals">
     <div class="total-item"><div class="val">${fmtMin(totalBookingMin)}</div><div class="lbl">Total Booking Time</div></div>
     <div class="total-item"><div class="val">${fmtMin(totalBlockMin)}</div><div class="lbl">Total Block/Maintenance Time</div></div>
@@ -1092,12 +1273,41 @@ function exportReportHTMLFn(from,to){
 }
 
 // ══════════════════════════════════════════
+// DATE INPUT MASK & PARSING
+// ══════════════════════════════════════════
+function syncDatePicker(pickerId, textId){
+  // Convert YYYY-MM-DD from native picker → MM/DD/YYYY in text input
+  const picker=document.getElementById(pickerId);
+  const txt=document.getElementById(textId);
+  if(!picker||!txt||!picker.value) return;
+  const[y,m,d]=picker.value.split('-');
+  txt.value=`${m}/${d}/${y}`;
+}
+function dateMask(inp){
+  // Auto-insert slashes: MM/DD/YYYY
+  let v=inp.value.replace(/[^\d]/g,'');
+  if(v.length>2) v=v.slice(0,2)+'/'+v.slice(2);
+  if(v.length>5) v=v.slice(0,5)+'/'+v.slice(5);
+  inp.value=v.slice(0,10);
+}
+function parseDateInput(val){
+  // Convert MM/DD/YYYY → YYYY-MM-DD for Supabase, or return null if invalid
+  const parts=val.trim().split('/');
+  if(parts.length!==3) return null;
+  const[m,d,y]=parts;
+  if(m.length!==2||d.length!==2||y.length!==4) return null;
+  const date=new Date(`${y}-${m}-${d}T12:00:00`);
+  if(isNaN(date)) return null;
+  return `${y}-${m}-${d}`;
+}
+
+// ══════════════════════════════════════════
 // ADMIN MANUAL BOOKING
 // ══════════════════════════════════════════
 function addAdminBookDateInline(){
   const inp=document.getElementById('adminBookDateInline');
-  const d=inp.value;
-  if(!d){showToast('Pick a date first.',true);return;}
+  const d=parseDateInput(inp.value);
+  if(!d){showToast('Enter a valid date (MM/DD/YYYY).',true);return;}
   if(adminBookPendingDates.includes(d)){showToast('Date already added.',true);return;}
   adminBookPendingDates.push(d);
   renderAdminBookDatesDisplay();
@@ -1112,14 +1322,14 @@ function renderAdminBookDatesDisplay(){
   if(!el) return;
   el.innerHTML=adminBookPendingDates.map(d=>{
     const[y,m,dd]=d.split('-');
-    return `<span class="date-chip"><span>${MONTHS[Number(m)-1]} ${Number(dd)}, ${y}</span><button onclick="removeAdminBookDate('${d}')" title="Remove">×</button></span>`;
+    return `<span class="date-chip"><span>${m}/${Number(dd)}/${y}</span><button onclick="removeAdminBookDate('${d}')" title="Remove">×</button></span>`;
   }).join('');
 }
 
 async function adminAddBooking(){
   // Auto-add whatever is typed in the inline date input
   const _ad=document.getElementById('adminBookDateInline');
-  if(_ad&&_ad.value&&!adminBookPendingDates.includes(_ad.value)){adminBookPendingDates.push(_ad.value);_ad.value='';renderAdminBookDatesDisplay();}
+  const _adp=parseDateInput(_ad?_ad.value:'');if(_adp&&!adminBookPendingDates.includes(_adp)){adminBookPendingDates.push(_adp);if(_ad)_ad.value='';renderAdminBookDatesDisplay();}
   const start = document.getElementById('adminBookStart').value;
   const end   = document.getElementById('adminBookEnd').value;
   const name  = document.getElementById('adminBookName').value.trim();
@@ -1184,9 +1394,10 @@ function showToast(msg,isError=false){
 // TIME SELECT POPULATION
 // ══════════════════════════════════════════
 function allTimeOptions(includeMidnight=false){
+  // Returns 24hr value strings (used as <option value>)
   const times=[];
-  for(let s=0;s<48;s++) times.push(slotToLabel(s));
-  if(includeMidnight) times.push('24:00'); // sentinel end = midnight
+  for(let s=0;s<48;s++) times.push(slotToValue(s));
+  if(includeMidnight) times.push('24:00');
   return times;
 }
 
@@ -1198,21 +1409,21 @@ function populatePairedSelects(startId, endId, keepEndIfValid=false, maxSlots=47
   if(!startSel || !endSel) return;
 
   const times = allTimeOptions();
-  startSel.innerHTML = times.map(t=>`<option value="${t}">${t}</option>`).join('');
+  startSel.innerHTML = times.map(t=>`<option value="${t}">${timeLabel(t)}</option>`).join('');
 
   function refreshEnd(isInit){
     const startSlot   = timeStrToSlot(startSel.value);
     const prevEnd     = endSel.value;
     const prevEndSlot = prevEnd === '24:00' ? 48 : timeStrToSlot(prevEnd);
-    const maxEnd      = Math.min(startSlot + maxSlots, 48); // 48 = 24:00
+    const maxEnd      = Math.min(startSlot + maxSlots + 1, 48); // +1 so 24:00 always reachable when maxSlots=47
     const withMid     = allTimeOptions(true); // include 24:00 sentinel
     endSel.innerHTML  = withMid
       .filter((_,i) => i > startSlot && i <= maxEnd)
-      .map(t=>`<option value="${t}">${t}</option>`).join('');
+      .map(t=>`<option value="${t}">${t==='24:00'?'12:00 am':timeLabel(t)}</option>`).join('');
     if(!isInit && keepEndIfValid && prevEnd && prevEndSlot > startSlot && prevEndSlot <= maxEnd){
       endSel.value = prevEnd;
     } else {
-      endSel.value = startSlot + 1 <= 47 ? slotToLabel(startSlot + 1) : '24:00';
+      endSel.value = startSlot + 1 <= 47 ? slotToValue(startSlot + 1) : '24:00';
     }
   }
 
@@ -1225,7 +1436,7 @@ function populateTimeSelects(){
   // We still need to fill bookStartTime with all 48 options once
   const bookStart = document.getElementById('bookStartTime');
   if(bookStart){
-    bookStart.innerHTML = allTimeOptions().map(t=>`<option value="${t}">${t}</option>`).join('');
+    bookStart.innerHTML = allTimeOptions().map(t=>`<option value="${t}">${timeLabel(t)}</option>`).join('');
     bookStart.addEventListener('change', ()=>{
       if(pendingSlot){
         refreshBookEndTimes(pendingSlot.dateStr, timeStrToSlot(bookStart.value), false);
@@ -1235,6 +1446,20 @@ function populateTimeSelects(){
   }
   populatePairedSelects('blockStart',     'blockEnd',     true); // no max, keep end if valid
   populatePairedSelects('adminBookStart', 'adminBookEnd', true); // admin manual booking
+
+  // Default start = 12:30 am (00:30), end = 11:30 pm (23:30), with 12:00 am as last option
+  [['blockStart','blockEnd'],['adminBookStart','adminBookEnd']].forEach(([sId,eId])=>{
+    const sSel=document.getElementById(sId);
+    const eSel=document.getElementById(eId);
+    if(!sSel||!eSel) return;
+    sSel.value='00:00';
+    // Rebuild end options from slot 0 (12:00 am) with 24:00 as last option
+    const allT=allTimeOptions(true); // includes 24:00
+    eSel.innerHTML=allT
+      .filter((_,i)=>i>0) // after 00:00 (slot 0)
+      .map(t=>`<option value="${t}">${t==='24:00'?'12:00 am':timeLabel(t)}</option>`).join('');
+    eSel.value='00:30'; // default = 12:30 am; 12:00 am is last selectable option
+  });
 }
 
 // Build end-time options for the booking modal, stopping before the next booking/block on that date.
@@ -1280,12 +1505,12 @@ function refreshBookEndTimes(dateStr, startSlot, isInit){
   const times = allTimeOptions(true);
   endSel.innerHTML = times
     .filter((_,i) => i > startSlot && i <= cap)
-    .map(t=>`<option value="${t}">${t}</option>`).join('');
+    .map(t=>`<option value="${t}">${timeLabel(t)}</option>`).join('');
 
   if(!isInit && prevEnd && prevEndSlot > startSlot && prevEndSlot <= cap){
     endSel.value = prevEnd;
   } else {
-    endSel.value = startSlot + 1 <= 47 ? slotToLabel(startSlot + 1) : '24:00';
+    endSel.value = startSlot + 1 <= 47 ? slotToValue(startSlot + 1) : '24:00';
   }
 }
 
